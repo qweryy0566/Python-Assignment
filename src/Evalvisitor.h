@@ -148,6 +148,5 @@ class EvalVisitor: public Python3BaseVisitor {
 
 };
 
-
 #endif //PYTHON_INTERPRETER_EVALVISITOR_H
 
