@@ -2,7 +2,7 @@
 #define PYTHON_INTERPRETER_EVALVISITOR_H
 
 #include "Python3BaseVisitor.h"
-#include "int2048.hpp"
+#include "tools.hpp"
 
 class EvalVisitor: public Python3BaseVisitor {
 // todo:override all methods of Python3BaseVisitor
@@ -132,6 +132,14 @@ class EvalVisitor: public Python3BaseVisitor {
   }
 
   virtual antlrcpp::Any visitAtom(Python3Parser::AtomContext *ctx) override {
+    std::string str = ctx->getText();
+    if (ctx->NUMBER()) {
+      // https://en.cppreference.com/w/cpp/string/basic_string/npos
+      if (str.find('.') == std::string::npos)
+        return StringToInt(str); 
+      else
+        return StringToFloat(str);
+    }
     return visitChildren(ctx);
   }
 
