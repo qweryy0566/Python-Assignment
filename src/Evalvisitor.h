@@ -2,6 +2,7 @@
 #define PYTHON_INTERPRETER_EVALVISITOR_H
 
 #include "Python3BaseVisitor.h"
+#include "int2048.hpp"
 
 class EvalVisitor: public Python3BaseVisitor {
 // todo:override all methods of Python3BaseVisitor
