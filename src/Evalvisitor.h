@@ -103,7 +103,10 @@ class EvalVisitor: public Python3BaseVisitor {
     return visitChildren(ctx);
   }
 
+  // arith_expr: term (addorsub_op term)*;
   virtual antlrcpp::Any visitArith_expr(Python3Parser::Arith_exprContext *ctx) override {
+    auto term_array = ctx->term();
+    
     return visitChildren(ctx);
   }
 
@@ -131,6 +134,7 @@ class EvalVisitor: public Python3BaseVisitor {
     return visitChildren(ctx);
   }
 
+  // atom: (NAME | NUMBER | STRING+| 'None' | 'True' | 'False' | ('(' test ')'));
   virtual antlrcpp::Any visitAtom(Python3Parser::AtomContext *ctx) override {
     std::string str = ctx->getText();
     if (ctx->NUMBER()) {
