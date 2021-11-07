@@ -26,7 +26,7 @@ class int2048 {
   int2048(long long x);
   int2048(const std::string &s);
   int2048(const int2048 &) = default;
-  operator double() const;
+  explicit operator double() const;
 
   // 读入一个大整数
   void Read(const std::string &s);
