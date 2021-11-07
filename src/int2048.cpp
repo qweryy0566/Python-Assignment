@@ -145,8 +145,7 @@ int2048 operator/(int2048 lhs, const int2048 &rhs) {
 
 std::istream &operator>>(std::istream &lhs, int2048 &rhs) {
   std::string s;
-  std::cin >> s;
-  rhs.Read(s);
+  lhs >> s, rhs.Read(s);
   return lhs;
 }
 std::ostream &operator<<(std::ostream &lhs, int2048 rhs) {
