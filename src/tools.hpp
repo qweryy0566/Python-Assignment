@@ -1,7 +1,7 @@
 #ifndef PYTHON_INTERPRETER_TOOLS_H
 #define PYTHON_INTERPRETER_TOOLS_H
 
-#include "int2048.hpp"
+#include "int2048.h"
 
 static int2048 StringToInt(const std::string &s) {
   int2048 ans(s);

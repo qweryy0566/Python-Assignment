@@ -105,7 +105,12 @@ class EvalVisitor: public Python3BaseVisitor {
 
   // arith_expr: term (addorsub_op term)*;
   virtual antlrcpp::Any visitArith_expr(Python3Parser::Arith_exprContext *ctx) override {
-    auto term_array = ctx->term();
+    auto term_array = ctx->term();  // 该类的 vector
+    if (term_array.size() == 1) {
+        ;  //TODO 加法中的非法类型报错
+    }
+    // 接下来查看是否有 float
+    auto op_array = ctx->addorsub_op();
     
     return visitChildren(ctx);
   }
