@@ -36,14 +36,16 @@ class int2048 {
   friend int2048 Inverse(int2048 ans);
   friend int2048 Abs(int2048 ans);
 
-  int2048 &operator+=(int2048 rhs);
+  int2048 &operator+=(const int2048 rhs);
   friend int2048 operator+(int2048 lhs, const int2048 &rhs);
-  int2048 &operator-=(int2048 rhs);
+  int2048 &operator-=(const int2048 rhs);
   friend int2048 operator-(int2048 lhs, const int2048 &rhs);
   int2048 &operator*=(const int2048 &rhs);
   friend int2048 operator*(const int2048 &lhs, const int2048 &rhs);
   int2048 &operator/=(const int2048 &rhs);
   friend int2048 operator/(int2048 lhs, const int2048 &rhs);
+  int2048 &operator%=(const int2048 &rhs);
+  friend int2048 operator%(const int2048 &lhs, const int2048 &rhs);
   friend std::istream &operator>>(std::istream &lhs, int2048 &rhs);
   friend std::ostream &operator<<(std::ostream &lhs, int2048 rhs);
   friend bool operator==(const int2048 &lhs, const int2048 &rhs);

@@ -107,10 +107,10 @@ class EvalVisitor: public Python3BaseVisitor {
   // arith_expr: term (addorsub_op term)*;
   virtual antlrcpp::Any visitArith_expr(Python3Parser::Arith_exprContext *ctx) override {
     auto term_array = ctx->term();  // 该类的 vector
-    if (term_array.size() == 1) {
-        ;  //TODO 加法中的非法类型报错
-    }
-    // 接下来查看是否有 float
+    if (term_array.size() == 1) return visitTerm(term_array[0]).as<RealAny>();
+    
+    // TODO 加法中的非法类型报错
+    // 使用 RealAny 自动完成类型转换
     auto op_array = ctx->addorsub_op();
     
     return visitChildren(ctx);
@@ -146,9 +146,9 @@ class EvalVisitor: public Python3BaseVisitor {
     if (ctx->NUMBER()) {
       // https://en.cppreference.com/w/cpp/string/basic_string/npos
       if (str.find('.') == std::string::npos)
-        return StringToInt(str); 
+        return RealAny(StringToInt(str)); 
       else
-        return StringToFloat(str);
+        return RealAny(StringToFloat(str));
     }
     return visitChildren(ctx);
   }

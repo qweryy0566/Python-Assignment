@@ -12,3 +12,10 @@ RealAny::RealAny(const int2048 &rhs) {
 RealAny::RealAny(const double &rhs) {
   float_data = rhs, type = kFloat;
 }
+
+RealAny &RealAny::operator+=(const RealAny &rhs) {
+  
+}
+RealAny operator+(RealAny lhs, const RealAny &rhs) {
+
+}

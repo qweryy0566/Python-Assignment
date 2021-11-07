@@ -3,7 +3,7 @@
 
 #include "int2048.h"
 
-enum Types { kString, kBool, kInt, kFloat };
+enum Types { kNone, kString, kBool, kInt, kFloat };
 
 class RealAny {
  private:
@@ -19,7 +19,25 @@ class RealAny {
   RealAny(const bool&);
   RealAny(const int2048&);
   RealAny(const double&);
-  
+
+  RealAny &operator+=(const RealAny &rhs);
+  friend RealAny operator+(const RealAny &lhs, const RealAny &rhs);
+  RealAny &operator-=(const RealAny &rhs);
+  friend RealAny operator-(const RealAny &lhs, const RealAny &rhs);
+  RealAny &operator*=(const RealAny &rhs);
+  friend RealAny operator*(const RealAny &lhs, const RealAny &rhs);
+  RealAny &operator/=(const RealAny &rhs);
+  friend RealAny operator/(const RealAny& lhs, const RealAny &rhs);
+  RealAny &operator%=(const RealAny &rhs);
+  friend RealAny operator%(const RealAny &lhs, const RealAny &rhs);
+  friend std::istream &operator>>(std::istream &lhs, RealAny &rhs);
+  friend std::ostream &operator<<(std::ostream &lhs, RealAny rhs);
+  friend bool operator==(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator!=(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator<(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator>(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator<=(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator>=(const RealAny &lhs, const RealAny &rhs);
 };
 
 #endif

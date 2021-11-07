@@ -15,15 +15,16 @@ int2048::operator double() const {
   double ans = 0;
   for (auto it = num.rbegin(); it != num.rend(); ++it)
     ans = ans * kBase + *it;
-  return ans;
+  return is_negative ? -ans : ans;
 }
 
 void int2048::Read(const std::string &s) {
+  // TODO 是否存在 +3 情况
   num.clear();
-  int s_len = s.length() - 1;
-  for (is_negative = s[0] == '-'; s_len >= is_negative; s_len -= kBit) {
+  int s_len = s.length() - 1, bound = s[0] == '+' || s[0] == '-';
+  for (is_negative = s[0] == '-'; s_len >= bound; s_len -= kBit) {
     int tmp = 0;
-    for (int i = 0; i < kBit && s_len - i >= is_negative; ++i)
+    for (int i = 0; i < kBit && s_len - i >= bound; ++i)
       tmp += (s[s_len - i] - '0') * kPow10[i];  // 从低到高位
     num.push_back(tmp);
   }
@@ -41,7 +42,7 @@ void int2048::Print() const {
 }
 
 int2048 Inverse(int2048 ans) {
-  ans.is_negative ^= 1;
+  if (!ans.IsZero()) ans.is_negative ^= 1;
   return ans;
 }
 int2048 Abs(int2048 ans) {
@@ -49,7 +50,7 @@ int2048 Abs(int2048 ans) {
   return ans;
 }
 
-int2048 &int2048::operator+=(int2048 rhs) {
+int2048 &int2048::operator+=(const int2048 rhs) {
   if (is_negative ^ rhs.is_negative) return *this = *this - Inverse(rhs);
   num.resize(max(num.size(), rhs.num.size()) + 1);
   for (int i = 0; i + 1 < num.size(); ++i) {
@@ -63,7 +64,7 @@ int2048 operator+(int2048 lhs, const int2048 &rhs) {
   return lhs += rhs;
 }
 
-int2048 &int2048::operator-=(int2048 rhs) {
+int2048 &int2048::operator-=(const int2048 rhs) {
   if (is_negative ^ rhs.is_negative) return *this = *this + Inverse(rhs);
   if (Abs(*this) < Abs(rhs)) return *this = Inverse(rhs - *this);
   for (int i = 0; i < num.size(); ++i) {
@@ -141,6 +142,13 @@ int2048 operator/(int2048 lhs, const int2048 &rhs) {
   if (!ans.num.back() && ans.num.size() > 1) ans.num.pop_back();
   if (ans.IsZero()) ans.is_negative = 0;
   return ans;
+}
+
+int2048 &int2048::operator%=(const int2048 &rhs) {
+  return *this = *this % rhs;
+}
+int2048 operator%(const int2048 &lhs, const int2048 &rhs) {
+  return lhs - (lhs / rhs) * rhs;  // definition != math
 }
 
 std::istream &operator>>(std::istream &lhs, int2048 &rhs) {
