@@ -92,7 +92,6 @@ RealAny operator-(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() - rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() - rhs.ToFloat(); break;
-    default:;  // TODO 非法
   }
   return ans;
 }
@@ -107,7 +106,36 @@ RealAny operator*(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() * rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() * rhs.ToFloat(); break;
-    default:;  // TODO 非法
   }
   return ans;
+}
+RealAny FloatDiv(const RealAny &lhs, const RealAny &rhs) {
+  RealAny ans;
+  ans.type = kFloat;
+  ans.float_data = lhs.ToFloat() / rhs.ToFloat();
+  return ans;
+}
+RealAny IntDiv(const RealAny &lhs, const RealAny &rhs) {
+  RealAny ans;
+  ans.type = kInt;
+  ans.int_data = lhs.ToInt() / rhs.ToInt();
+  return ans;
+}
+RealAny &RealAny::operator%=(const RealAny &rhs) {
+  return *this = *this % rhs;
+}
+RealAny operator%(const RealAny &lhs, const RealAny &rhs) {
+  RealAny ans;
+  ans.type = kInt;
+  ans.int_data = lhs.ToInt() % rhs.ToInt();
+  return ans;
+}
+std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
+  switch (rhs.type) {
+    case kBool: lhs << (rhs.bool_data ? "True" : "False"); break;
+    case kInt: lhs << rhs.int_data; break;
+    case kFloat: lhs << rhs.float_data; break;
+    case kStr: lhs << rhs.str_data; break;
+  }
+  return lhs;
 }

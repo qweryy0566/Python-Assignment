@@ -112,7 +112,8 @@ class EvalVisitor: public Python3BaseVisitor {
     auto op_array = ctx->addorsub_op();
     for (int i = 1; i < term_array.size(); ++i) {
       std::string op = op_array[i - 1]->getText();
-      ans = op == "+" ? ans + term_array[i] : ans - term_array[i];
+      RealAny rhs = visitTerm(term_array[i]).as<RealAny>();
+      ans = op == "+" ? ans + rhs : ans - rhs;
     }
     return ans;
   }
@@ -129,10 +130,11 @@ class EvalVisitor: public Python3BaseVisitor {
     auto op_array = ctx->muldivmod_op();
     for (int i = 1; i < factor_array.size(); ++i) {
       std::string op = op_array[i - 1]->getText();
-      if (op == "*") ans = ans * factor_array[i];
-      else if (op == "/");
-      else if (op == "//");
-      else ;
+      RealAny rhs = visitFactor(factor_array[i]).as<RealAny>();
+      if (op == "*") ans *= rhs;
+      else if (op == "/") ans = FloatDiv(ans, rhs);
+      else if (op == "//") ans = IntDiv(ans, rhs);
+      else ans %= rhs;
     }
     return ans;
   }

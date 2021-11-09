@@ -113,9 +113,8 @@ int2048 &int2048::operator/=(const int2048 &rhs) {
 int2048 operator/(int2048 lhs, const int2048 &rhs) {
   int2048 ans;
   ans.is_negative = lhs.is_negative ^ rhs.is_negative;
-  if (ans.is_negative)
+  if (ans.is_negative)  // python 中总是向下取整
     lhs += lhs.is_negative ? -Abs(rhs) + 1 : Abs(rhs) - 1;
-  // python 中总是向下取整
   ans.num.resize(max(1ul, lhs.num.size() - rhs.num.size() + 1));
   int dl = rhs.num.back() + 1, dr = rhs.num.back();  // 试根的除数
   for (int i = lhs.num.size() - rhs.num.size(); i >= 0; --i) {

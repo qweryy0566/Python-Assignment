@@ -36,8 +36,8 @@ class RealAny {
   friend RealAny operator-(const RealAny &lhs, const RealAny &rhs);
   RealAny &operator*=(const RealAny &rhs);
   friend RealAny operator*(const RealAny &lhs, const RealAny &rhs);
-  RealAny &operator/=(const RealAny &rhs);
-  friend RealAny operator/(const RealAny &lhs, const RealAny &rhs);
+  friend RealAny FloatDiv(const RealAny &lhs, const RealAny &rhs);
+  friend RealAny IntDiv(const RealAny &lhs, const RealAny &rhs);
   RealAny &operator%=(const RealAny &rhs);
   friend RealAny operator%(const RealAny &lhs, const RealAny &rhs);
   friend std::istream &operator>>(std::istream &lhs, RealAny &rhs);
