@@ -17,7 +17,6 @@ class int2048 {
   bool is_negative = 0;
   std::vector<long long> num;  // 初始为空，不为 0.
 
-  bool IsZero() const;
   friend int2048 Times(const int &lhs, const int2048 &rhs);
 
  public:
@@ -28,14 +27,12 @@ class int2048 {
   int2048(const int2048 &) = default;
   explicit operator double() const;
 
-  // 读入一个大整数
   void Read(const std::string &s);
-  // 输出储存的大整数
   void Print() const;
-
-  friend int2048 Inverse(int2048 ans);
+  bool IsZero() const;
   friend int2048 Abs(int2048 ans);
 
+  const int2048 operator-() const;
   int2048 &operator+=(const int2048 rhs);
   friend int2048 operator+(int2048 lhs, const int2048 &rhs);
   int2048 &operator-=(const int2048 rhs);

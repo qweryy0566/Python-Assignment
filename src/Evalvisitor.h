@@ -3,7 +3,6 @@
 
 #include "Python3BaseVisitor.h"
 #include "real_any.h"
-#include "tools.hpp"
 
 class EvalVisitor: public Python3BaseVisitor {
 // todo:override all methods of Python3BaseVisitor
@@ -107,13 +106,15 @@ class EvalVisitor: public Python3BaseVisitor {
   // arith_expr: term (addorsub_op term)*;
   virtual antlrcpp::Any visitArith_expr(Python3Parser::Arith_exprContext *ctx) override {
     auto term_array = ctx->term();  // 该类的 vector
-    if (term_array.size() == 1) return visitTerm(term_array[0]).as<RealAny>();
-    
+    RealAny ans = visitTerm(term_array[0]).as<RealAny>();
     // TODO 加法中的非法类型报错
     // 使用 RealAny 自动完成类型转换
     auto op_array = ctx->addorsub_op();
-    
-    return visitChildren(ctx);
+    for (int i = 1; i < term_array.size(); ++i) {
+      std::string op = op_array[i - 1]->getText();
+      ans = op == "+" ? ans + term_array[i] : ans - term_array[i];
+    }
+    return ans;
   }
 
   virtual antlrcpp::Any visitAddorsub_op(Python3Parser::Addorsub_opContext *ctx) override {
@@ -121,7 +122,19 @@ class EvalVisitor: public Python3BaseVisitor {
   }
 
   virtual antlrcpp::Any visitTerm(Python3Parser::TermContext *ctx) override {
-    return visitChildren(ctx);
+    auto factor_array = ctx->factor();  // 该类的 vector
+    RealAny ans = visitFactor(factor_array[0]).as<RealAny>();
+    // TODO 加法中的非法类型报错
+    // 使用 RealAny 自动完成类型转换
+    auto op_array = ctx->muldivmod_op();
+    for (int i = 1; i < factor_array.size(); ++i) {
+      std::string op = op_array[i - 1]->getText();
+      if (op == "*") ans = ans * factor_array[i];
+      else if (op == "/");
+      else if (op == "//");
+      else ;
+    }
+    return ans;
   }
 
   virtual antlrcpp::Any visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) override {

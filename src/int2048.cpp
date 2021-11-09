@@ -1,8 +1,5 @@
 #include "int2048.h"
 
-inline bool int2048::IsZero() const {
-  return num.size() == 1 && !num[0];
-}
 int2048::int2048(const std::string &s) {
   Read(s);
 }
@@ -40,18 +37,21 @@ void int2048::Print() const {
     for (printf("%lld", num[i--]); ~i;) printf("%08lld", num[i--]);
   }
 }
-
-int2048 Inverse(int2048 ans) {
-  if (!ans.IsZero()) ans.is_negative ^= 1;
-  return ans;
+bool int2048::IsZero() const {
+  return num.size() == 1 && !num[0];
 }
 int2048 Abs(int2048 ans) {
   ans.is_negative = 0;
   return ans;
 }
 
+const int2048 int2048::operator-() const {
+  int2048 ans = *this;
+  if (!ans.IsZero()) ans.is_negative ^= 1;
+  return ans;
+}
 int2048 &int2048::operator+=(const int2048 rhs) {
-  if (is_negative ^ rhs.is_negative) return *this = *this - Inverse(rhs);
+  if (is_negative ^ rhs.is_negative) return *this = *this - (-rhs);
   num.resize(max(num.size(), rhs.num.size()) + 1);
   for (int i = 0; i + 1 < num.size(); ++i) {
     if (i < rhs.num.size()) num[i] += rhs.num[i];
@@ -65,8 +65,8 @@ int2048 operator+(int2048 lhs, const int2048 &rhs) {
 }
 
 int2048 &int2048::operator-=(const int2048 rhs) {
-  if (is_negative ^ rhs.is_negative) return *this = *this + Inverse(rhs);
-  if (Abs(*this) < Abs(rhs)) return *this = Inverse(rhs - *this);
+  if (is_negative ^ rhs.is_negative) return *this = *this + (-rhs);
+  if (Abs(*this) < Abs(rhs)) return *this = -(rhs - *this);
   for (int i = 0; i < num.size(); ++i) {
     if (i < rhs.num.size()) num[i] -= rhs.num[i];
     if (num[i] < 0) num[i] += kBase, --num[i + 1];
@@ -113,13 +113,16 @@ int2048 &int2048::operator/=(const int2048 &rhs) {
 int2048 operator/(int2048 lhs, const int2048 &rhs) {
   int2048 ans;
   ans.is_negative = lhs.is_negative ^ rhs.is_negative;
+  if (ans.is_negative)
+    lhs += lhs.is_negative ? -Abs(rhs) + 1 : Abs(rhs) - 1;
+  // python 中总是向下取整
   ans.num.resize(max(1ul, lhs.num.size() - rhs.num.size() + 1));
   int dl = rhs.num.back() + 1, dr = rhs.num.back();  // 试根的除数
   for (int i = lhs.num.size() - rhs.num.size(); i >= 0; --i) {
     int2048 div;
     for (int j = 0; i + j < lhs.num.size(); ++j)
       div.num.push_back(lhs.num[i + j]);
-    if (div >= rhs) {
+    if (div >= Abs(rhs)) {
       int l, r, mid;
       if (div.num.size() > rhs.num.size())
         l = (div.num.back() * kBase + div.num[rhs.num.size() - 1]) / dl,
@@ -134,7 +137,8 @@ int2048 operator/(int2048 lhs, const int2048 &rhs) {
           r = mid - 1;
       }
       ans.num[i] = l, div -= Times(l, rhs);
-      for (int j = 0; j < div.num.size(); ++j) lhs.num[i + j] = div.num[j];
+      for (int j = 0; j < div.num.size(); ++j)
+        lhs.num[i + j] = div.num[j];
       lhs.num.resize(i + div.num.size());
       i = lhs.num.size() - rhs.num.size() + 1;
     }
