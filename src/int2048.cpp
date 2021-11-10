@@ -14,6 +14,18 @@ int2048::operator double() const {
     ans = ans * kBase + *it;
   return is_negative ? -ans : ans;
 }
+int2048::operator std::string() const {
+  int i, tmp;
+  std::string ans;
+  auto it = num.rbegin();
+  for (i = 0; i + 1 < kBit && kPow10[i + 1] <= *it; ++i);
+  for (tmp = *it; ~i; --i)
+    ans.push_back(tmp / kPow10[i] + '0'), tmp -= tmp / kPow10[i] * kPow10[i];
+  for (++it; it != num.rend(); ++it)
+    for (i = kBit - 1, tmp = *it; ~i; --i)
+      ans.push_back(tmp / kPow10[i] + '0'), tmp -= tmp / kPow10[i] * kPow10[i];
+  return ans;
+}
 
 void int2048::Read(const std::string &s) {
   // TODO 是否存在 +3 情况

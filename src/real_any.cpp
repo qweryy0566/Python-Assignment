@@ -4,6 +4,9 @@ inline bool Equal(const double &lhs, const double &rhs) {
   return -eps < lhs - rhs && lhs - rhs < eps;
 }
 
+int2048 FloatToInt(const double &src) {
+  // TODO : FloatToInt
+}
 int2048 StringToInt(const std::string &s) {
   return int2048(s);
 }
@@ -18,6 +21,9 @@ double StringToFloat(const std::string &s) {
   for (; *it != '.'; ++it) ans = ans * 10.0 + *it - '0';
   for (++it; it != s.end(); ++it, p *= 0.1) ans += (*it - '0') * p;
   return is_negative ? -ans : ans;
+}
+std::string FloatToString(const double &src) {
+  // TODO : FloatToString
 }
 
 RealAny::RealAny(const std::string &rhs) {
@@ -45,7 +51,7 @@ int2048 RealAny::ToInt() const {
   switch (type) {
     case kBool: return bool_data;
     case kInt: return int_data;
-    case kFloat:;  // TODO FloatToInt
+    case kFloat: return FloatToInt(float_data);
     case kStr: return StringToInt(str_data);
   }
 }
@@ -60,12 +66,15 @@ double RealAny::ToFloat() const {
 std::string RealAny::ToStr() const {
   switch (type) {
     case kBool: return bool_data ? "True" : "False";
-    case kInt:;  // TODO IntToString
-    case kFloat:;  // TODO FloatToString
+    case kInt: return (std::string)int_data;
+    case kFloat: return FloatToString(float_data);
     case kStr: return str_data;
   }
 }
 
+const RealAny RealAny::operator-() const {
+  return RealAny(int2048(0)) - *this;
+}
 RealAny &RealAny::operator+=(const RealAny &rhs) {
   return *this = *this + rhs;
 }
@@ -134,7 +143,8 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
   switch (rhs.type) {
     case kBool: lhs << (rhs.bool_data ? "True" : "False"); break;
     case kInt: lhs << rhs.int_data; break;
-    case kFloat: lhs << rhs.float_data; break;
+    case kFloat: lhs << std::fixed << std::setprecision(6) << rhs.float_data; break;
+    // 本题要求 6 位
     case kStr: lhs << rhs.str_data; break;
   }
   return lhs;

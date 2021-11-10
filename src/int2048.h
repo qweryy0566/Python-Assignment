@@ -9,8 +9,8 @@
 using std::max;
 using std::min;
 
-static const int kBase = 1e8, kBit = 8;
-static const int kPow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000};
+const int kBase = 1e8, kBit = 8;
+const int kPow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000};
 
 class int2048 {
  private:
@@ -26,6 +26,7 @@ class int2048 {
   int2048(const std::string &s);
   int2048(const int2048 &) = default;
   explicit operator double() const;
+  explicit operator std::string() const;
 
   void Read(const std::string &s);
   void Print() const;

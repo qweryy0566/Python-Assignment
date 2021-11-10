@@ -5,7 +5,8 @@
 #include "real_any.h"
 
 class EvalVisitor: public Python3BaseVisitor {
-// todo:override all methods of Python3BaseVisitor
+  // TODO : override all methods of Python3BaseVisitor
+  // 统一在返回时不 as, 而在调用时用 as
  public:
   virtual antlrcpp::Any visitFile_input(Python3Parser::File_inputContext *ctx) override {
     return visitChildren(ctx);
@@ -111,9 +112,9 @@ class EvalVisitor: public Python3BaseVisitor {
     // 使用 RealAny 自动完成类型转换
     auto op_array = ctx->addorsub_op();
     for (int i = 1; i < term_array.size(); ++i) {
-      std::string op = op_array[i - 1]->getText();
+      auto op = op_array[i - 1];
       RealAny rhs = visitTerm(term_array[i]).as<RealAny>();
-      ans = op == "+" ? ans + rhs : ans - rhs;
+      ans = op->ADD() ? ans + rhs : ans - rhs;
     }
     return ans;
   }
@@ -129,11 +130,11 @@ class EvalVisitor: public Python3BaseVisitor {
     // 使用 RealAny 自动完成类型转换
     auto op_array = ctx->muldivmod_op();
     for (int i = 1; i < factor_array.size(); ++i) {
-      std::string op = op_array[i - 1]->getText();
+      auto op = op_array[i - 1];
       RealAny rhs = visitFactor(factor_array[i]).as<RealAny>();
-      if (op == "*") ans *= rhs;
-      else if (op == "/") ans = FloatDiv(ans, rhs);
-      else if (op == "//") ans = IntDiv(ans, rhs);
+      if (op->STAR()) ans *= rhs;
+      else if (op->DIV()) ans = FloatDiv(ans, rhs);
+      else if (op->IDIV()) ans = IntDiv(ans, rhs);
       else ans %= rhs;
     }
     return ans;
@@ -144,15 +145,38 @@ class EvalVisitor: public Python3BaseVisitor {
   }
 
   virtual antlrcpp::Any visitFactor(Python3Parser::FactorContext *ctx) override {
-    return visitChildren(ctx);
+    if (ctx->atom_expr()) return visitAtom_expr(ctx->atom_expr());
+    if (ctx->ADD())
+      return visitFactor(ctx->factor()).as<RealAny>();
+    else
+      return -visitFactor(ctx->factor()).as<RealAny>();
   }
 
+  // atom_expr: atom trailer?;
   virtual antlrcpp::Any visitAtom_expr(Python3Parser::Atom_exprContext *ctx) override {
-    return visitChildren(ctx);
+    if (!ctx->trailer()) return visitAtom(ctx->atom());
+    auto list_array = visitTrailer(ctx->trailer()).as<std::vector<RealAny>>();
+    std::string func_name = ctx->atom()->getText();
+    // CheckBuiltin
+    if (func_name == "print") {
+      for (auto it : list_array) std::cout << it << ' ';
+      std::cout << '\n';
+      return RealAny();  // 返回值为 None
+    } else if (func_name == "int")
+      return RealAny(list_array[0].ToInt());
+    else if (func_name == "float")
+      return RealAny(list_array[0].ToFloat());
+    else if (func_name == "str")
+      return RealAny(list_array[0].ToStr());
+    else if (func_name == "bool")
+      return RealAny(list_array[0].ToBool());
+    else  // other defined function
+      return visitChildren(ctx);  // TODO : 调用用户定义的函数
   }
 
   virtual antlrcpp::Any visitTrailer(Python3Parser::TrailerContext *ctx) override {
-    return visitChildren(ctx);
+    if (!ctx->arglist()) return std::vector<RealAny>();
+    return visitArglist(ctx->arglist());  // visit 即可，上级会 as
   }
 
   // atom: (NAME | NUMBER | STRING+| 'None' | 'True' | 'False' | ('(' test ')'));
@@ -165,6 +189,7 @@ class EvalVisitor: public Python3BaseVisitor {
       else
         return RealAny(StringToFloat(str));
     }
+    // TODO : other types of atom
     return visitChildren(ctx);
   }
 
@@ -173,10 +198,17 @@ class EvalVisitor: public Python3BaseVisitor {
   }
 
   virtual antlrcpp::Any visitArglist(Python3Parser::ArglistContext *ctx) override {
-    return visitChildren(ctx);
+    std::vector<RealAny> list_array;
+    auto argument_array = ctx->argument();
+    for (auto it : argument_array)
+      list_array.push_back(visitArgument(it).as<RealAny>());
+    return list_array;
   }
-
+  
+  // argument: ( test | test '=' test );
   virtual antlrcpp::Any visitArgument(Python3Parser::ArgumentContext *ctx) override {
+    if (!ctx->ASSIGN()) return visitTest(ctx->test(0));
+    // TODO : Keyword argument (test '=' test)
     return visitChildren(ctx);
   }
 
