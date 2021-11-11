@@ -16,6 +16,7 @@ set(src_dir
         src/Evalvisitor.cpp
         src/int2048.cpp
         src/real_any.cpp
+        src/name_scope.cpp
         src/utils.cpp
         )
 file(GLOB antlr4-cpp-src

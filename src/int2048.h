@@ -18,6 +18,7 @@ class int2048 {
   bool is_negative = 0;
   std::vector<long long> num;  // 初始为空，不为 0.
 
+  bool IsZero() const;
   friend int2048 Times(const int &lhs, const int2048 &rhs);
 
  public:
@@ -27,9 +28,9 @@ class int2048 {
   int2048(const std::string &s);
   int2048(const int2048 &) = default;
   explicit operator double() const;
+  explicit operator bool() const;
 
   void Read(const std::string &s);
-  bool IsZero() const;
   friend int2048 Abs(int2048 ans);
   friend int2048 FloatToInt(const double &);
 

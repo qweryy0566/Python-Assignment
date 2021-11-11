@@ -1,5 +1,8 @@
 #include "int2048.h"
 
+bool int2048::IsZero() const {
+  return num.size() == 1 && !num[0];
+}
 int2048::int2048(const std::string &s) {
   Read(s);
 }
@@ -14,6 +17,9 @@ int2048::operator double() const {
     ans = ans * kBase + *it;
   return is_negative ? -ans : ans;
 }
+int2048::operator bool() const {
+  return !IsZero();
+}
 
 void int2048::Read(const std::string &s) {
   // TODO 是否存在 +3 情况
@@ -27,9 +33,6 @@ void int2048::Read(const std::string &s) {
   }
   while (!num.back() && num.size() > 1) num.pop_back();
   if (IsZero()) is_negative = 0;
-}
-bool int2048::IsZero() const {
-  return num.size() == 1 && !num[0];
 }
 int2048 Abs(int2048 ans) {
   ans.is_negative = 0;

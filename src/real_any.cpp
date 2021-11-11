@@ -37,7 +37,7 @@ RealAny::RealAny(const double &rhs) {
 bool RealAny::ToBool() const {
   switch (type) {
     case kBool: return bool_data;
-    case kInt: return !int_data.IsZero();
+    case kInt: return (bool)int_data;
     case kFloat: return float_data;
     case kStr: return !str_data.empty();
   }
@@ -85,7 +85,9 @@ RealAny operator+(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() + rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() + rhs.ToFloat(); break;
-    default:;  // TODO 非法
+    default:  // That means kStr
+      ans.str_data = lhs.ToStr() + rhs.ToStr(); 
+      // TODO 非法
   }
   return ans;
 }
@@ -114,6 +116,16 @@ RealAny operator*(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() * rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() * rhs.ToFloat(); break;
+    default: {  // That means kStr
+      int2048 cnt;
+      std::string str;
+      if (lhs.type == kStr)
+        str = lhs.str_data, cnt = rhs.ToInt();
+      else
+        str = rhs.str_data, cnt = lhs.ToInt();
+      while ((bool)cnt)
+        ans.str_data += str, cnt -= 1;
+    }
   }
   return ans;
 }
