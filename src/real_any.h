@@ -1,7 +1,6 @@
 #ifndef PYTHON_INTERPRETER_REAL_ANY_H
 #define PYTHON_INTERPRETER_REAL_ANY_H
 
-#include <iomanip>
 #include "int2048.h"
 
 static const double eps = 1e-9;
@@ -9,9 +8,7 @@ enum Types { kNone, kBool, kInt, kFloat, kStr };
 
 bool Equal(const double &, const double &);
 int2048 FloatToInt(const double &);
-int2048 StringToInt(const std::string &);
 double StringToFloat(const std::string &);
-std::string FloatToString(const double &);
 
 class RealAny {
  private:
@@ -52,6 +49,9 @@ class RealAny {
   friend bool operator>(const RealAny &lhs, const RealAny &rhs);
   friend bool operator<=(const RealAny &lhs, const RealAny &rhs);
   friend bool operator>=(const RealAny &lhs, const RealAny &rhs);
+  const bool operator!() const;
+  friend bool operator||(const RealAny &lhs, const RealAny &rhs);
+  friend bool operator&&(const RealAny &lhs, const RealAny &rhs);
 };
 
 #endif

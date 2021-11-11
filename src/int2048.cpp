@@ -14,18 +14,6 @@ int2048::operator double() const {
     ans = ans * kBase + *it;
   return is_negative ? -ans : ans;
 }
-int2048::operator std::string() const {
-  int i, tmp;
-  std::string ans;
-  auto it = num.rbegin();
-  for (i = 0; i + 1 < kBit && kPow10[i + 1] <= *it; ++i);
-  for (tmp = *it; ~i; --i)
-    ans.push_back(tmp / kPow10[i] + '0'), tmp -= tmp / kPow10[i] * kPow10[i];
-  for (++it; it != num.rend(); ++it)
-    for (i = kBit - 1, tmp = *it; ~i; --i)
-      ans.push_back(tmp / kPow10[i] + '0'), tmp -= tmp / kPow10[i] * kPow10[i];
-  return ans;
-}
 
 void int2048::Read(const std::string &s) {
   // TODO 是否存在 +3 情况
@@ -39,15 +27,6 @@ void int2048::Read(const std::string &s) {
   }
   while (!num.back() && num.size() > 1) num.pop_back();
   if (IsZero()) is_negative = 0;
-}
-void int2048::Print() const {
-  is_negative ? putchar('-') : 0;
-  if (num.empty())
-    putchar('0');
-  else {
-    int i = num.size() - 1;
-    for (printf("%lld", num[i--]); ~i;) printf("%08lld", num[i--]);
-  }
 }
 bool int2048::IsZero() const {
   return num.size() == 1 && !num[0];
@@ -172,7 +151,14 @@ std::istream &operator>>(std::istream &lhs, int2048 &rhs) {
   return lhs;
 }
 std::ostream &operator<<(std::ostream &lhs, int2048 rhs) {
-  rhs.Print();
+  if (rhs.is_negative) lhs << '-';
+  if (rhs.num.empty())
+    lhs << '0';
+  else {
+    int i = rhs.num.size() - 1;
+    for (lhs << rhs.num[i--]; ~i;)
+      lhs << std::setw(8) << std::setfill('0') << rhs.num[i--];
+  }
   return lhs;
 }
 

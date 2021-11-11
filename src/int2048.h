@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 using std::max;
@@ -26,12 +27,11 @@ class int2048 {
   int2048(const std::string &s);
   int2048(const int2048 &) = default;
   explicit operator double() const;
-  explicit operator std::string() const;
 
   void Read(const std::string &s);
-  void Print() const;
   bool IsZero() const;
   friend int2048 Abs(int2048 ans);
+  friend int2048 FloatToInt(const double &);
 
   const int2048 operator-() const;
   int2048 &operator+=(const int2048 rhs);

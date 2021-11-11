@@ -3,12 +3,10 @@
 inline bool Equal(const double &lhs, const double &rhs) {
   return -eps < lhs - rhs && lhs - rhs < eps;
 }
-
 int2048 FloatToInt(const double &src) {
-  // TODO : FloatToInt
-}
-int2048 StringToInt(const std::string &s) {
-  return int2048(s);
+  std::string tmp = std::to_string(src);
+  tmp.resize(tmp.length() - 7);  // 默认有 6 位小数
+  return int2048(tmp);
 }
 double StringToFloat(const std::string &s) {
   bool is_negative = 0;
@@ -21,9 +19,6 @@ double StringToFloat(const std::string &s) {
   for (; *it != '.'; ++it) ans = ans * 10.0 + *it - '0';
   for (++it; it != s.end(); ++it, p *= 0.1) ans += (*it - '0') * p;
   return is_negative ? -ans : ans;
-}
-std::string FloatToString(const double &src) {
-  // TODO : FloatToString
 }
 
 RealAny::RealAny(const std::string &rhs) {
@@ -43,7 +38,7 @@ bool RealAny::ToBool() const {
   switch (type) {
     case kBool: return bool_data;
     case kInt: return !int_data.IsZero();
-    case kFloat: return !Equal(float_data, 0);
+    case kFloat: return float_data;
     case kStr: return !str_data.empty();
   }
 }
@@ -52,7 +47,7 @@ int2048 RealAny::ToInt() const {
     case kBool: return bool_data;
     case kInt: return int_data;
     case kFloat: return FloatToInt(float_data);
-    case kStr: return StringToInt(str_data);
+    case kStr: return str_data;
   }
 }
 double RealAny::ToFloat() const {
@@ -65,9 +60,13 @@ double RealAny::ToFloat() const {
 }
 std::string RealAny::ToStr() const {
   switch (type) {
-    case kBool: return bool_data ? "True" : "False";
-    case kInt: return (std::string)int_data;
-    case kFloat: return FloatToString(float_data);
+    case kBool: return std::to_string(bool_data);
+    case kInt: {
+      std::stringstream ret;
+      ret << int_data;
+      return ret.str();
+    }
+    case kFloat: return std::to_string(float_data);
     case kStr: return str_data;
   }
 }
@@ -141,6 +140,7 @@ RealAny operator%(const RealAny &lhs, const RealAny &rhs) {
 }
 std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
   switch (rhs.type) {
+    case kNone: lhs << "None"; break;
     case kBool: lhs << (rhs.bool_data ? "True" : "False"); break;
     case kInt: lhs << rhs.int_data; break;
     case kFloat: lhs << std::fixed << std::setprecision(6) << rhs.float_data; break;
@@ -148,4 +148,14 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
     case kStr: lhs << rhs.str_data; break;
   }
   return lhs;
+}
+
+const bool RealAny::operator!() const {
+  return !ToBool();
+}
+bool operator||(const RealAny &lhs, const RealAny &rhs) {
+  return lhs.ToBool() || rhs.ToBool();
+}
+bool operator&&(const RealAny &lhs, const RealAny &rhs) {
+  return lhs.ToBool() && rhs.ToBool();
 }
