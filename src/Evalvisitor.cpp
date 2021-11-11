@@ -83,7 +83,12 @@ antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   auto and_test = ctx->and_test();
   if (and_test.size() == 1) return visitAnd_test(and_test[0]);
   for (auto it : and_test) {
-    ans = ans || visitAnd_test(it).as<RealAny>();
+    RealAny tmp;
+    if (visitAnd_test(it).is<std::string>())
+      tmp = scope[visitAnd_test(it).as<std::string>()];
+    else
+      tmp = visitAnd_test(it).as<RealAny>();
+    ans = ans || tmp;
     if (ans) return RealAny(true);
   }
   return RealAny(false);
@@ -94,15 +99,23 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   auto not_test = ctx->not_test();
   if (not_test.size() == 1) return visitNot_test(not_test[0]);
   for (auto it : not_test) {
-    ans = ans && visitNot_test(it).as<RealAny>();
+    RealAny tmp;
+    if (visitNot_test(it).is<std::string>())
+      tmp = scope[visitNot_test(it).as<std::string>()];
+    else
+      tmp = visitNot_test(it).as<RealAny>();
+    ans = ans && tmp;
     if (!ans) return RealAny(false);
   }
   return RealAny(true);
 }
 
 antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
-  if (ctx->not_test()) return !visitNot_test(ctx->not_test()).as<RealAny>();
-  return visitComparison(ctx->comparison());
+  if (ctx->comparison()) return visitComparison(ctx->comparison());
+  if (visitNot_test(ctx->not_test()).is<std::string>())
+    return !scope[visitNot_test(ctx->not_test()).as<std::string>()];
+  else
+    return !visitNot_test(ctx->not_test()).as<RealAny>();
 }
 
 antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
@@ -201,10 +214,9 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
       return RealAny(int2048(str));
     else
       return RealAny(StringToFloat(str));
-  } else if (ctx->NAME()) {
-    // TODO : 判断变量是否定义过
-    return scope[ctx->NAME()->getText()];
-  } else if (ctx->NONE())
+  } else if (ctx->NAME())
+    return ctx->NAME()->getText();  // 返回字符串形式，便于上级区分
+  else if (ctx->NONE())
     return RealAny();
   else if (ctx->TRUE())
     return RealAny(true);
