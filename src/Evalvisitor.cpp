@@ -1,6 +1,7 @@
 #include "Evalvisitor.h"
 
 NameScope scope;
+enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
 static RealAny &GetValue(antlrcpp::Any src) {
@@ -29,15 +30,17 @@ antlrcpp::Any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
 }
 
 antlrcpp::Any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
-  return visitChildren(ctx);
+  return ctx->simple_stmt() ? visitSimple_stmt(ctx->simple_stmt())
+                            : visitCompound_stmt(ctx->compound_stmt());
 }
 
 antlrcpp::Any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return visitSmall_stmt(ctx->small_stmt());
 }
 
 antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return ctx->flow_stmt() ? visitFlow_stmt(ctx->flow_stmt())
+                          : visitExpr_stmt(ctx->expr_stmt());
 }
 
 // No return value!
@@ -70,7 +73,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
         GetValue(left_list[j]) = GetValue(right_list[j]);
       // TODO : 判断非变量与 list 大小不同的情况
     }
-  return antlrcpp::Any();  // 无返回值
+  return kNormal;  // 无返回值
 }
 
 antlrcpp::Any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
@@ -90,7 +93,9 @@ antlrcpp::Any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContex
 }
 
 antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
-  return visitChildren(ctx);
+  // TODO : return_stmt
+  visitTestlist(ctx->testlist());
+  return kReturn;
 }
 
 antlrcpp::Any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
@@ -106,7 +111,13 @@ antlrcpp::Any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx
 }
 
 antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
-  return visitChildren(ctx);
+  if (ctx->simple_stmt()) return visitSimple_stmt(ctx->simple_stmt());
+  auto stmt_array = ctx->stmt();
+  for (auto it : stmt_array) {
+    StmtRes result = visitStmt(it).as<StmtRes>();
+    if (result) return result;
+  }
+  return kNormal;
 }
 
 antlrcpp::Any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {

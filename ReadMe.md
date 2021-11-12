@@ -19,19 +19,19 @@
 
 - [ ] `stmt: simple_stmt | compound_stmt;`
   
-- [ ] `simple_stmt: small_stmt  NEWLINE;`
+- [x] `simple_stmt: small_stmt  NEWLINE;`
   
-- [ ] `small_stmt: expr_stmt | flow_stmt;`
+- [x] `small_stmt: expr_stmt | flow_stmt;`
   
 - [x] `expr_stmt: testlist ( (augassign testlist) | ('=' testlist)*);  // 连等 加等/减等/...`
   
 - [x] `augassign: ('+=' | '-=' | '*=' | '/=' | '//=' | '%=' );`
   
-- [ ] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
+- [x] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
   
-- [ ] `break_stmt: 'break';`
+- [x] `break_stmt: 'break';`
 
-- [ ] `continue_stmt: 'continue';`
+- [x] `continue_stmt: 'continue';`
   
 - [ ] `return_stmt: 'return' (testlist)?;`
   
