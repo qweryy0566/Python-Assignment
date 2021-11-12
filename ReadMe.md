@@ -17,7 +17,7 @@
   
 - [ ] `tfpdef: NAME ;`
 
-- [ ] `stmt: simple_stmt | compound_stmt;`
+- [x] `stmt: simple_stmt | compound_stmt;`
   
 - [x] `simple_stmt: small_stmt  NEWLINE;`
   
@@ -27,11 +27,11 @@
   
 - [x] `augassign: ('+=' | '-=' | '*=' | '/=' | '//=' | '%=' );`
   
-- [x] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
+- [ ] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
   
-- [x] `break_stmt: 'break';`
+- [ ] `break_stmt: 'break';`
 
-- [x] `continue_stmt: 'continue';`
+- [ ] `continue_stmt: 'continue';`
   
 - [ ] `return_stmt: 'return' (testlist)?;`
   
@@ -41,7 +41,7 @@
   
 - [ ] `while_stmt: 'while' test ':' suite;`
 
-- [ ] `suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT;`
+- [x] `suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT;`
   
 - [x] `test: or_test ;`
   
