@@ -5,6 +5,8 @@
 #include "name_scope.h"
 #include "real_any.h"
 
+extern NameScope scope;
+
 class EvalVisitor: public Python3BaseVisitor {
   // TODO : override all methods of Python3BaseVisitor
   // 统一在返回时不 as, 而在调用时用 as

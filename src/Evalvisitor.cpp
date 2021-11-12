@@ -2,6 +2,11 @@
 
 NameScope scope;
 
+static RealAny &GetValue(antlrcpp::Any src) {
+  if (src.is<std::string>()) return scope[src.as<std::string>()];
+  return src.as<RealAny>();
+}
+
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   return visitChildren(ctx);
 }
@@ -34,8 +39,37 @@ antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx
   return visitChildren(ctx);
 }
 
+// No return value!
 antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
-  return visitChildren(ctx);
+  auto list_array = ctx->testlist();
+  if (list_array.size() == 1) return visitTestlist(list_array[0]);
+  std::vector<antlrcpp::Any> left_list, right_list;
+  if (ctx->augassign()) {
+    auto op = ctx->augassign();
+    left_list = visitTestlist(list_array[0]).as<std::vector<antlrcpp::Any>>();
+    right_list = visitTestlist(list_array[1]).as<std::vector<antlrcpp::Any>>();
+    RealAny &lhs = GetValue(left_list[0]), &rhs = GetValue(right_list[0]);
+    if (op->ADD_ASSIGN())
+      lhs += rhs;
+    else if (op->SUB_ASSIGN())
+      lhs -= rhs;
+    else if (op->MULT_ASSIGN())
+      lhs *= rhs;
+    else if (op->DIV_ASSIGN())
+      lhs = FloatDiv(lhs, rhs);
+    else if (op->IDIV_ASSIGN())
+      lhs = IntDiv(lhs, rhs);
+    else  // That means MOD_ASSIGN().
+      lhs %= rhs;
+  } else
+    for (int i = list_array.size() - 1; i; --i) {
+      left_list = visitTestlist(list_array[i - 1]).as<std::vector<antlrcpp::Any>>();
+      right_list = visitTestlist(list_array[i]).as<std::vector<antlrcpp::Any>>();
+      for (int j = 0; j < left_list.size(); ++j)
+        GetValue(left_list[j]) = GetValue(right_list[j]);
+      // TODO : 判断非变量与 list 大小不同的情况
+    }
+  return antlrcpp::Any();  // 无返回值
 }
 
 antlrcpp::Any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
@@ -83,12 +117,7 @@ antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   auto and_test = ctx->and_test();
   if (and_test.size() == 1) return visitAnd_test(and_test[0]);
   for (auto it : and_test) {
-    RealAny tmp;
-    if (visitAnd_test(it).is<std::string>())
-      tmp = scope[visitAnd_test(it).as<std::string>()];
-    else
-      tmp = visitAnd_test(it).as<RealAny>();
-    ans = ans || tmp;
+    ans = ans || GetValue(visitAnd_test(it));
     if (ans) return RealAny(true);
   }
   return RealAny(false);
@@ -99,12 +128,7 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   auto not_test = ctx->not_test();
   if (not_test.size() == 1) return visitNot_test(not_test[0]);
   for (auto it : not_test) {
-    RealAny tmp;
-    if (visitNot_test(it).is<std::string>())
-      tmp = scope[visitNot_test(it).as<std::string>()];
-    else
-      tmp = visitNot_test(it).as<RealAny>();
-    ans = ans && tmp;
+    ans = ans && GetValue(visitNot_test(it));
     if (!ans) return RealAny(false);
   }
   return RealAny(true);
@@ -112,10 +136,7 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
 
 antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
   if (ctx->comparison()) return visitComparison(ctx->comparison());
-  if (visitNot_test(ctx->not_test()).is<std::string>())
-    return !scope[visitNot_test(ctx->not_test()).as<std::string>()];
-  else
-    return !visitNot_test(ctx->not_test()).as<RealAny>();
+  return !GetValue(visitNot_test(ctx->not_test()));
 }
 
 antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
@@ -129,13 +150,14 @@ antlrcpp::Any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
 // arith_expr: term (addorsub_op term)*;
 antlrcpp::Any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
   auto term_array = ctx->term();  // 该类的 vector
-  RealAny ans = visitTerm(term_array[0]).as<RealAny>();
+  if (term_array.size() == 1) return visitTerm(term_array[0]);
+  RealAny ans = GetValue(visitTerm(term_array[0]));
   // TODO 加法中的非法类型报错
   // 使用 RealAny 自动完成类型转换
   auto op_array = ctx->addorsub_op();
   for (int i = 1; i < term_array.size(); ++i) {
     auto op = op_array[i - 1];
-    RealAny rhs = visitTerm(term_array[i]).as<RealAny>();
+    RealAny rhs = GetValue(visitTerm(term_array[i]));
     ans = op->ADD() ? ans + rhs : ans - rhs;
   }
   return ans;
@@ -147,13 +169,14 @@ antlrcpp::Any EvalVisitor::visitAddorsub_op(Python3Parser::Addorsub_opContext *c
 
 antlrcpp::Any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   auto factor_array = ctx->factor();  // 该类的 vector
-  RealAny ans = visitFactor(factor_array[0]).as<RealAny>();
+  if (factor_array.size() == 1) return visitFactor(factor_array[0]);
+  RealAny ans = GetValue(visitFactor(factor_array[0]));
   // TODO 乘除法中的非法类型报错
   // 使用 RealAny 自动完成类型转换
   auto op_array = ctx->muldivmod_op();
   for (int i = 1; i < factor_array.size(); ++i) {
     auto op = op_array[i - 1];
-    RealAny rhs = visitFactor(factor_array[i]).as<RealAny>();
+    RealAny rhs = GetValue(visitFactor(factor_array[i]));
     if (op->STAR())
       ans *= rhs;
     else if (op->DIV())
@@ -173,13 +196,14 @@ antlrcpp::Any EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext 
 antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
   if (ctx->atom_expr()) return visitAtom_expr(ctx->atom_expr());
   if (ctx->ADD())
-    return visitFactor(ctx->factor()).as<RealAny>();
+    return GetValue(visitFactor(ctx->factor()));
   else
-    return -visitFactor(ctx->factor()).as<RealAny>();
+    return -GetValue(visitFactor(ctx->factor()));
 }
 
 // atom_expr: atom trailer?;
 antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
+  // 函数都有 RealAny 类型的返回值
   if (!ctx->trailer()) return visitAtom(ctx->atom());
   auto list_array = visitTrailer(ctx->trailer()).as<std::vector<RealAny>>();
   std::string func_name = ctx->atom()->getText();
@@ -214,9 +238,10 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
       return RealAny(int2048(str));
     else
       return RealAny(StringToFloat(str));
-  } else if (ctx->NAME())
+  } else if (ctx->NAME()) {
+    // TODO : 判断变量是否定义过
     return ctx->NAME()->getText();  // 返回字符串形式，便于上级区分
-  else if (ctx->NONE())
+  } else if (ctx->NONE())
     return RealAny();
   else if (ctx->TRUE())
     return RealAny(true);
@@ -236,16 +261,20 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
 }
 
 // testlist: test (',' test)* (',')?;
+// TODO : What does the (',')? mean ??
 antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
-  // TODO : 注意变量
-  return visitChildren(ctx);
+  std::vector<antlrcpp::Any> ans;  // 用好两种 Any 类
+  auto test_array = ctx->test();
+  for (auto it : test_array) ans.push_back(visitTest(it));
+  return ans;
 }
 
 antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   std::vector<RealAny> list_array;
+  // TODO : 返回类型可能需要修改
   auto argument_array = ctx->argument();
   for (auto it : argument_array)
-    list_array.push_back(visitArgument(it).as<RealAny>());
+    list_array.push_back(GetValue(visitArgument(it)));
   return list_array;
 }
 
