@@ -2,6 +2,7 @@
 
 NameScope scope;
 
+// To check if it is a variable. If so, return the value of it.
 static RealAny &GetValue(antlrcpp::Any src) {
   if (src.is<std::string>()) return scope[src.as<std::string>()];
   return src.as<RealAny>();
@@ -140,7 +141,23 @@ antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
 }
 
 antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
-  return visitChildren(ctx);
+  auto arith_array = ctx->arith_expr();
+  if (arith_array.size() == 1) return visitArith_expr(arith_array[0]);
+  auto op_array = ctx->comp_op();
+  RealAny lhs = GetValue(visitArith_expr(arith_array[0])), rhs;
+  for (int i = 1; i < arith_array.size(); ++i) {
+    rhs = GetValue(visitArith_expr(arith_array[i]));
+    std::string op_str = op_array[i - 1]->getText();
+    if (op_str == "<" && !(lhs < rhs) ||
+        op_str == ">" && !(lhs > rhs) ||
+        op_str == "==" && !(lhs == rhs) ||
+        op_str == ">=" && !(lhs >= rhs) ||
+        op_str == "<=" && !(lhs <= rhs) ||
+        op_str == "!=" && !(lhs != rhs))
+      return RealAny(false);
+    lhs = rhs;
+  }
+  return RealAny(true);
 }
 
 antlrcpp::Any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {

@@ -167,13 +167,13 @@ std::ostream &operator<<(std::ostream &lhs, int2048 rhs) {
   return lhs;
 }
 
-inline bool operator==(const int2048 &lhs, const int2048 &rhs) {
+bool operator==(const int2048 &lhs, const int2048 &rhs) {
   return !(lhs < rhs) && !(rhs < lhs);
 }
-inline bool operator!=(const int2048 &lhs, const int2048 &rhs) {
+bool operator!=(const int2048 &lhs, const int2048 &rhs) {
   return lhs < rhs || rhs < lhs;
 }
-inline bool operator<(const int2048 &lhs, const int2048 &rhs) {
+bool operator<(const int2048 &lhs, const int2048 &rhs) {
   if (lhs.is_negative ^ rhs.is_negative) return lhs.is_negative;
   if (lhs.num.size() != rhs.num.size())
     return lhs.num.size() < rhs.num.size() ^ lhs.is_negative;
@@ -182,12 +182,12 @@ inline bool operator<(const int2048 &lhs, const int2048 &rhs) {
       return lhs.num[i] < rhs.num[i] ^ lhs.is_negative;
   return 0;
 }
-inline bool operator>(const int2048 &lhs, const int2048 &rhs) {
+bool operator>(const int2048 &lhs, const int2048 &rhs) {
   return rhs < lhs;
 }
-inline bool operator<=(const int2048 &lhs, const int2048 &rhs) {
+bool operator<=(const int2048 &lhs, const int2048 &rhs) {
   return !(rhs < lhs);
 }
-inline bool operator>=(const int2048 &lhs, const int2048 &rhs) {
+bool operator>=(const int2048 &lhs, const int2048 &rhs) {
   return !(lhs < rhs);
 }

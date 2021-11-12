@@ -1,8 +1,5 @@
 #include "real_any.h"
 
-inline bool Equal(const double &lhs, const double &rhs) {
-  return -eps < lhs - rhs && lhs - rhs < eps;
-}
 int2048 FloatToInt(const double &src) {
   std::string tmp = std::to_string(src);
   tmp.resize(tmp.length() - 7);  // 默认有 6 位小数
@@ -85,8 +82,8 @@ RealAny operator+(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() + rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() + rhs.ToFloat(); break;
-    default:  // That means kStr
-      ans.str_data = lhs.ToStr() + rhs.ToStr(); 
+    default:  // That means kStr.
+      ans.str_data = lhs.str_data + rhs.str_data; 
       // TODO 非法
   }
   return ans;
@@ -170,4 +167,39 @@ bool operator||(const RealAny &lhs, const RealAny &rhs) {
 }
 bool operator&&(const RealAny &lhs, const RealAny &rhs) {
   return lhs.ToBool() && rhs.ToBool();
+}
+bool operator==(const RealAny &lhs, const RealAny &rhs) {
+  if (lhs.type != rhs.type) return false;
+  switch (lhs.type) {
+    case kBool: return lhs.bool_data == rhs.bool_data;
+    case kInt: return lhs.int_data == rhs.int_data;
+    case kFloat: return lhs.float_data == rhs.float_data;
+    case kStr: return lhs.str_data == rhs.str_data;
+    // TODO : other type
+    default: return true;  // NoneType
+  }
+}
+bool operator!=(const RealAny &lhs, const RealAny &rhs) {
+  return !(lhs == rhs);
+}
+bool operator<(const RealAny &lhs, const RealAny &rhs) {
+  // Only int, float, string
+  Types check = std::max(lhs.type, rhs.type);
+  switch(check) {
+    case kBool: case kInt:
+      return lhs.ToInt() < rhs.ToInt();
+    case kFloat:
+      return lhs.ToFloat() < rhs.ToFloat();
+    default:  // That means both are str.
+      return lhs.str_data < rhs.str_data;
+  }
+}
+bool operator>(const RealAny &lhs, const RealAny &rhs) {
+  return rhs < lhs;
+}
+bool operator<=(const RealAny &lhs, const RealAny &rhs) {
+  return !(rhs < lhs);
+}
+bool operator>=(const RealAny &lhs, const RealAny &rhs) {
+  return !(lhs < rhs);
 }

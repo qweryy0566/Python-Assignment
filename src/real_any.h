@@ -3,10 +3,8 @@
 
 #include "int2048.h"
 
-static const double eps = 1e-9;
 enum Types { kNone, kBool, kInt, kFloat, kStr };
 
-bool Equal(const double &, const double &);
 int2048 FloatToInt(const double &);
 double StringToFloat(const std::string &);
 
