@@ -168,10 +168,14 @@ std::ostream &operator<<(std::ostream &lhs, int2048 rhs) {
 }
 
 bool operator==(const int2048 &lhs, const int2048 &rhs) {
-  return !(lhs < rhs) && !(rhs < lhs);
+  if (lhs.num.size() != rhs.num.size() || lhs.is_negative != rhs.is_negative)
+    return false;
+  for (int i = 0; i < lhs.num.size(); ++i)
+    if (lhs.num[i] != rhs.num[i]) return false;
+  return true;
 }
 bool operator!=(const int2048 &lhs, const int2048 &rhs) {
-  return lhs < rhs || rhs < lhs;
+  return !(lhs == rhs);
 }
 bool operator<(const int2048 &lhs, const int2048 &rhs) {
   if (lhs.is_negative ^ rhs.is_negative) return lhs.is_negative;
