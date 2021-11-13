@@ -7,9 +7,13 @@ int2048::int2048(const std::string &s) {
   Read(s);
 }
 int2048::int2048(long long x) {
-  if (x < 0) is_negative = 1, x = -x;
-  for (num.push_back(x % kBase), x /= kBase; x; x /= kBase)
-    num.push_back(x % kBase);
+  unsigned long long y;
+  if (x < 0)
+    is_negative = 1, y = 0ull - x;
+  else
+    y = x;
+  for (num.push_back(y % kBase), y /= kBase; y; y /= kBase)
+    num.push_back(y % kBase);
 }
 int2048::operator double() const {
   double ans = 0;
