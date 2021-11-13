@@ -48,10 +48,11 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
   auto list_array = ctx->testlist();
   if (list_array.size() == 1) return visitTestlist(list_array[0]);
   std::vector<antlrcpp::Any> left_list, right_list;
+  right_list = visitTestlist(list_array.back()).as<std::vector<antlrcpp::Any>>();
+  // 初始时 right_list 为最右边的 testlist
   if (ctx->augassign()) {
     auto op = ctx->augassign();
     left_list = visitTestlist(list_array[0]).as<std::vector<antlrcpp::Any>>();
-    right_list = visitTestlist(list_array[1]).as<std::vector<antlrcpp::Any>>();
     RealAny &lhs = GetValue(left_list[0]), &rhs = GetValue(right_list[0]);
     if (op->ADD_ASSIGN())
       lhs += rhs;
@@ -66,12 +67,12 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     else  // That means MOD_ASSIGN().
       lhs %= rhs;
   } else
-    for (int i = list_array.size() - 1; i; --i) {
-      left_list = visitTestlist(list_array[i - 1]).as<std::vector<antlrcpp::Any>>();
-      right_list = visitTestlist(list_array[i]).as<std::vector<antlrcpp::Any>>();
+    for (int i = list_array.size() - 2; ~i; --i) {
+      left_list = visitTestlist(list_array[i]).as<std::vector<antlrcpp::Any>>();
       for (int j = 0; j < left_list.size(); ++j)
         GetValue(left_list[j]) = GetValue(right_list[j]);
       // TODO : 判断非变量与 list 大小不同的情况
+      right_list = left_list;  // 减少 visit 次数
     }
   return kNormal;  // 无返回值
 }
