@@ -53,7 +53,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
   if (ctx->augassign()) {
     auto op = ctx->augassign();
     left_list = visitTestlist(list_array[0]).as<std::vector<antlrcpp::Any>>();
-    RealAny &lhs = GetValue(left_list[0]), &rhs = GetValue(right_list[0]);
+    RealAny &lhs = GetValue(left_list[0]), rhs = GetValue(right_list[0]);
     if (op->ADD_ASSIGN())
       lhs += rhs;
     else if (op->SUB_ASSIGN())
@@ -149,7 +149,7 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
 
 antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
   if (ctx->comparison()) return visitComparison(ctx->comparison());
-  return !GetValue(visitNot_test(ctx->not_test()));
+  return (RealAny)!GetValue(visitNot_test(ctx->not_test()));
 }
 
 antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {

@@ -47,7 +47,7 @@ class RealAny {
   friend bool operator>(const RealAny &lhs, const RealAny &rhs);
   friend bool operator<=(const RealAny &lhs, const RealAny &rhs);
   friend bool operator>=(const RealAny &lhs, const RealAny &rhs);
-  const bool operator!() const;
+  const bool operator!() const;  // 注意运算结果类型
   friend bool operator||(const RealAny &lhs, const RealAny &rhs);
   friend bool operator&&(const RealAny &lhs, const RealAny &rhs);
 };

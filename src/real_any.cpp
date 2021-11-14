@@ -159,6 +159,7 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
   return lhs;
 }
 
+// 注意运算完变为了 bool 而非 RealAny
 const bool RealAny::operator!() const {
   return !ToBool();
 }
