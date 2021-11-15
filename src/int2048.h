@@ -22,9 +22,9 @@ class int2048 {
   friend int2048 Times(const int &lhs, const int2048 &rhs);
 
  public:
-  // 构造函数
+  // 构造函数。其实可以加 explicit 规定所有转换，简化代码。
   int2048() = default;
-  int2048(long long x);
+  int2048(const long long &x);
   int2048(const std::string &s);
   int2048(const int2048 &) = default;
   explicit operator double() const;

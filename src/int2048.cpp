@@ -6,7 +6,7 @@ bool int2048::IsZero() const {
 int2048::int2048(const std::string &s) {
   Read(s);
 }
-int2048::int2048(long long x) {
+int2048::int2048(const long long &x) {
   unsigned long long y;
   if (x < 0)
     is_negative = 1, y = 0ull - x;

@@ -131,9 +131,9 @@ antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   if (and_test.size() == 1) return visitAnd_test(and_test[0]);
   for (auto it : and_test) {
     ans = ans || GetValue(visitAnd_test(it));
-    if (ans) return RealAny(true);
+    if (ans) return RealAny(true);  // different to real python
   }
-  return RealAny(false);
+  return RealAny(false);  // different to real python
 }
 
 antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
@@ -142,9 +142,9 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   if (not_test.size() == 1) return visitNot_test(not_test[0]);
   for (auto it : not_test) {
     ans = ans && GetValue(visitNot_test(it));
-    if (!ans) return RealAny(false);
+    if (!ans) return RealAny(false);  // different to real python
   }
-  return RealAny(true);
+  return RealAny(true);  // different to real python
 }
 
 antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
