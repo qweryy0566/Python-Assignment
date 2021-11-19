@@ -2,10 +2,11 @@
 #define PYTHON_INTERPRETER_EVALVISITOR_H
 
 #include "Python3BaseVisitor.h"
-#include "name_scope.h"
+#include "variable.h"
+#include "function.h"
 #include "real_any.h"
 
-extern NameScope scope;
+extern Variable variable;
 
 class EvalVisitor: public Python3BaseVisitor {
   // TODO : override all methods of Python3BaseVisitor

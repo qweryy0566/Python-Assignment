@@ -1,12 +1,11 @@
 #include "Evalvisitor.h"
 
-NameScope scope;
-std::unordered_map<std::string, Python3Parser::SuiteContext *> func;
+Variable variable;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
 static RealAny &GetValue(antlrcpp::Any src) {
-  if (src.is<std::string>()) return scope[src.as<std::string>()];
+  if (src.is<std::string>()) return variable[src.as<std::string>()];
   return src.as<RealAny>();
 }
 
@@ -19,7 +18,8 @@ antlrcpp::Any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
 }
 
 antlrcpp::Any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
-  return visitChildren(ctx);
+  if (!ctx->typedargslist()) return 0;
+  return visitTypedargslist(ctx->typedargslist());
 }
 
 antlrcpp::Any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
