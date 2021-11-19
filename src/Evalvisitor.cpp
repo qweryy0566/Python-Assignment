@@ -1,6 +1,7 @@
 #include "Evalvisitor.h"
 
 NameScope scope;
+std::unordered_map<std::string, Python3Parser::SuiteContext *> func;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
