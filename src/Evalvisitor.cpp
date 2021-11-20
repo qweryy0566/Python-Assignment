@@ -130,10 +130,18 @@ antlrcpp::Any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContex
 // 将返回值存到 return_value 中
 // 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
-  vector<RealAny> ans;
-  auto list_array = visitTestlist(ctx->testlist()).as<vector<antlrcpp::Any>>();
-  for (auto it : list_array) ans.push_back(GetValue(it));
-  return_value = ans;
+  if (!ctx->testlist())
+    return_value = RealAny(kNone);
+  else {
+    auto list_array = visitTestlist(ctx->testlist()).as<vector<antlrcpp::Any>>();
+    if (list_array.size() == 1)
+      return_value = GetValue(list_array[0]);
+    else {
+      vector<RealAny> ans;
+      for (auto it : list_array) ans.push_back(GetValue(it));
+      return_value = ans;
+    }
+  }
   return kReturn;
 }
 
