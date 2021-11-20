@@ -3,7 +3,7 @@
 ### 功能部分
 
 - [x] 变量栈空间管理
-- [ ] 函数定义与调用
+- [x] 函数定义与调用
 
 ### 表达式解析部分
 
@@ -27,19 +27,19 @@
   
 - [x] `augassign: ('+=' | '-=' | '*=' | '/=' | '//=' | '%=' );`
   
-- [ ] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
+- [x] `flow_stmt: break_stmt | continue_stmt | return_stmt;`
   
-- [ ] `break_stmt: 'break';`
+- [x] `break_stmt: 'break';`
 
-- [ ] `continue_stmt: 'continue';`
+- [x] `continue_stmt: 'continue';`
   
-- [ ] `return_stmt: 'return' (testlist)?;`
+- [x] `return_stmt: 'return' (testlist)?;`
   
-- [ ] `compound_stmt: if_stmt | while_stmt | funcdef ;`
+- [x] `compound_stmt: if_stmt | while_stmt | funcdef ;`
   
-- [ ] `if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ('else' ':' suite)?;`
+- [x] `if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ('else' ':' suite)?;`
   
-- [ ] `while_stmt: 'while' test ':' suite;`
+- [x] `while_stmt: 'while' test ':' suite;`
 
 - [x] `suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT;`
   
@@ -75,7 +75,7 @@
   
 - [x] `arglist: argument (',' argument)*  (',')?;`
   
-- [ ] `argument: ( test | test '=' test );  // 缺 Keyword argument`
+- [x] `argument: ( test | test '=' test );`
 
 ### 报错部分
 
