@@ -30,6 +30,12 @@ RealAny::RealAny(const int2048 &rhs) {
 RealAny::RealAny(const double &rhs) {
   float_data = rhs, type = kFloat;
 }
+RealAny::RealAny(const vector<RealAny> &rhs) {
+  tuple = rhs, type = kTuple;
+}
+RealAny::RealAny(const Types &rhs) {
+  type = rhs;
+}
 
 bool RealAny::ToBool() const {
   switch (type) {
@@ -37,6 +43,7 @@ bool RealAny::ToBool() const {
     case kInt: return (bool)int_data;
     case kFloat: return float_data;
     case kStr: return !str_data.empty();
+    case kTuple: return tuple.size();
   }
 }
 int2048 RealAny::ToInt() const {
@@ -56,16 +63,10 @@ double RealAny::ToFloat() const {
   }
 }
 string RealAny::ToStr() const {
-  switch (type) {
-    case kBool: return std::to_string(bool_data);
-    case kInt: {
-      std::stringstream ret;
-      ret << int_data;
-      return ret.str();
-    }
-    case kFloat: return std::to_string(float_data);
-    case kStr: return str_data;
-  }
+  if (type == kStr) return str_data;
+  std::stringstream ret;
+  ret << *this;
+  return ret.str();
 }
 
 const RealAny RealAny::operator-() const {
@@ -82,8 +83,12 @@ RealAny operator+(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() + rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() + rhs.ToFloat(); break;
-    default:  // That means kStr.
-      ans.str_data = lhs.str_data + rhs.str_data; 
+    case kStr:
+      ans.str_data = lhs.str_data + rhs.str_data; break;
+    default:  // That means kTuple.
+      if (lhs.type != rhs.type) break;
+      ans.tuple.insert(ans.tuple.end(), lhs.tuple.begin(), lhs.tuple.end());
+      ans.tuple.insert(ans.tuple.end(), rhs.tuple.begin(), rhs.tuple.end());
       // TODO 非法
   }
   return ans;
@@ -155,6 +160,13 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
     case kFloat: lhs << std::fixed << std::setprecision(6) << rhs.float_data; break;
     // 本题要求 6 位
     case kStr: lhs << rhs.str_data; break;
+    case kTuple:  // 添加 tuple 功能
+      // lhs << '(';
+      for (int i = 0; i < rhs.tuple.size(); ++i)
+        // lhs << (i ? " " : "") << rhs.tuple[i] << ',';
+        lhs << (i ? " " : "") << rhs.tuple[i];
+      // lhs << ')';
+      break;
   }
   return lhs;
 }

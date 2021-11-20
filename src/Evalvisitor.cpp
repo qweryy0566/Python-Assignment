@@ -2,6 +2,8 @@
 
 Variable variable;
 Function function;
+// 利用栈的性质，只需保存当前的返回值
+RealAny return_value;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
@@ -30,9 +32,10 @@ antlrcpp::Any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContex
   auto tfpdef_array = ctx->tfpdef();
   auto test_array = ctx->test();
   ParametersType ans;
-  for (int i = 0, j = test_array.size() - tfpdef_array.size(); i < tfpdef_array.size(); ++i) {
+  int d = test_array.size() - tfpdef_array.size();  // 两个 size 的差
+  for (int i = 0; i < tfpdef_array.size(); ++i) {
     RealAny default_val;
-    if (i + j >= 0) default_val = GetValue(visitTest(test_array[i + j]));
+    if (i + d >= 0) default_val = GetValue(visitTest(test_array[i + d]));
     ans.push_back(make_pair(tfpdef_array[i]->NAME()->getText(), default_val));
   }
   return ans;
@@ -84,6 +87,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
       left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
       for (int j = 0; j < left_list.size(); ++j)
         GetValue(left_list[j]) = GetValue(right_list[j]);
+      // 注意这里的赋值规则和标准 python 略有不同
       // TODO : 判断非变量与 list 大小不同的情况
       right_list = left_list;  // 减少 visit 次数
     }
@@ -91,39 +95,56 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
 }
 
 antlrcpp::Any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
-  return visitChildren(ctx);
+  return visitChildren(ctx);  // Done.
 }
 
 antlrcpp::Any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return visitChildren(ctx);  // Done.
 }
 
 antlrcpp::Any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return kBreak;
 }
 
 antlrcpp::Any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return kContinue;
 }
 
 antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
-  // TODO : return_stmt
-  visitTestlist(ctx->testlist());
+  vector<RealAny> ans;
+  auto list_array = visitTestlist(ctx->testlist()).as<vector<antlrcpp::Any>>();
+  for (auto it : list_array) ans.push_back(GetValue(it));
+  return_value = ans;
   return kReturn;
 }
 
 antlrcpp::Any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
-  return visitChildren(ctx);
+  return visitChildren(ctx);  // Done.
 }
 
 antlrcpp::Any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
-  return visitChildren(ctx);
+  auto test_array = ctx->test();
+  auto suite_array = ctx->suite();
+  int i, elif_size = ctx->ELIF().size();
+  for (i = 0; i <= elif_size; ++i)
+    if (GetValue(test_array[i]).ToBool()) return visitSuite(suite_array[i]);
+  if (ctx->ELSE()) return visitSuite(suite_array[i]);
+  return kNormal;
 }
 
 antlrcpp::Any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
-  return visitChildren(ctx);
+  while (GetValue(visitTest(ctx->test())).ToBool()) {
+    StmtRes result = visitSuite(ctx->suite()).as<StmtRes>();
+    if (result == kBreak)
+      break;
+    else if (result == kReturn)
+      return kReturn;
+  }
+  return kNormal;
 }
 
+// if while funcdef 中用到
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   if (ctx->simple_stmt()) return visitSimple_stmt(ctx->simple_stmt());
   auto stmt_array = ctx->stmt();
@@ -134,6 +155,7 @@ antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   return kNormal;
 }
 
+// 可能 test 是一个 testlist (函数返回值)
 antlrcpp::Any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   return visitOr_test(ctx->or_test());
 }
@@ -189,7 +211,7 @@ antlrcpp::Any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
-// arith_expr: term (addorsub_op term)*;
+// 返回类型为 RealAny
 antlrcpp::Any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
   auto term_array = ctx->term();  // 该类的 vector
   if (term_array.size() == 1) return visitTerm(term_array[0]);
@@ -247,27 +269,47 @@ antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
 antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   // 函数都有 RealAny 类型的返回值
   if (!ctx->trailer()) return visitAtom(ctx->atom());
-  auto list_array = visitTrailer(ctx->trailer()).as<vector<RealAny>>();
-  string func_name = ctx->atom()->getText();
-  // CheckBuiltin
+  auto list_array = visitTrailer(ctx->trailer()).as<ParametersType>();
+  // 在 Positional argument 情况下调用 .second 即可
+  string func_name = ctx->atom()->getText();  // 函数名
+  // Check_BuiltinFunction
   if (func_name == "print") {
-    for (auto it : list_array) std::cout << it << ' ';
+    for (auto it : list_array) std::cout << it.second << ' ';
     std::cout << '\n';
     return RealAny();  // 返回值为 None
   } else if (func_name == "int")
-    return RealAny(list_array.empty() ? int2048(0) : list_array[0].ToInt());
+    return RealAny(list_array.empty() ? int2048(0) : list_array[0].second.ToInt());
   else if (func_name == "float")
-    return RealAny(list_array.empty() ? double() : list_array[0].ToFloat());
+    return RealAny(list_array.empty() ? double() : list_array[0].second.ToFloat());
   else if (func_name == "str")
-    return RealAny(list_array.empty() ? string() : list_array[0].ToStr());
+    return RealAny(list_array.empty() ? string() : list_array[0].second.ToStr());
   else if (func_name == "bool")
-    return RealAny(list_array.empty() ? bool() : list_array[0].ToBool());
-  else                          // other defined function
-    return visitChildren(ctx);  // TODO : 调用用户定义的函数
+    return RealAny(list_array.empty() ? bool() : list_array[0].second.ToBool());
+  else {  // other defined function
+          // TODO : 调用用户定义的函数
+    variable.AddLevel();
+    auto para_array = function.Parameters(func_name);
+    int list_size = list_array.size(), para_size = para_array.size();
+    for (int i = 0; i < para_size; ++i) {
+      string var_name;
+      RealAny value;
+      if (i < list_size) {
+        var_name = list_array[i].first.empty() ? para_array[i].first : list_array[i].first;
+        value = list_array[i].second;
+      } else {
+        var_name = para_array[i].first;
+        value = para_array[i].second;
+      }
+      variable.LefValue(var_name) = value;
+    }
+    visitSuite(function.Suite(func_name));
+    variable.DelLevel();
+    return return_value;
+  }
 }
 
 antlrcpp::Any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
-  if (!ctx->arglist()) return vector<RealAny>();
+  if (!ctx->arglist()) return ParametersType();
   return visitArglist(ctx->arglist());  // visit 即可，上级会 as
 }
 
@@ -302,27 +344,44 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   }
 }
 
-// testlist: test (',' test)* (',')?;
-// TODO : What does the (',')? mean ??
+// testlist: test (',' test)* (',')?
 antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   vector<antlrcpp::Any> ans;  // 用好两种 Any 类
   auto test_array = ctx->test();
-  for (auto it : test_array) ans.push_back(visitTest(it));
+  for (auto it : test_array) {
+    antlrcpp::Any tmp = visitTest(it);
+    // 在 testlist 和 arglist 处将 tuple 解包装 
+    if (tmp.is<RealAny>() && tmp.as<RealAny>().type == kTuple) {
+      auto tuple_array = tmp.as<RealAny>().tuple;
+      for (auto j : tuple_array) ans.push_back(j);
+    } else {
+      ans.push_back(tmp);
+    }
+  }
   return ans;
 }
 
 antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
-  vector<RealAny> list_array;
-  // TODO : 返回类型可能需要修改
+  ParametersType list_array;
   auto argument_array = ctx->argument();
-  for (auto it : argument_array)
-    list_array.push_back(GetValue(visitArgument(it)));
+  for (auto it : argument_array) {
+    // 在 testlist 和 arglist 处将 tuple 解包装
+    auto tmp = visitArgument(it).as<ArguType>();
+    if (tmp.second.type == kTuple) {
+      auto tuple_array = tmp.second.tuple;
+      for (auto j : tuple_array) list_array.push_back(make_pair(string(), j));
+    } else {
+      list_array.push_back(tmp);
+    }
+  }
   return list_array;
 }
 
-// argument: ( test | test '=' test );
+// 此处发生 antlrcpp::Any -> RealAny 转换
+// return type : ArguType (pair<string, RealAny>)
 antlrcpp::Any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
-  if (!ctx->ASSIGN()) return visitTest(ctx->test(0));
-  // TODO : Keyword argument (test '=' test)
-  return visitChildren(ctx);
+  if (!ctx->ASSIGN()) return make_pair(string(), GetValue(visitTest(ctx->test(0))));
+  // Positional argument
+  return make_pair(ctx->test(0)->getText(), GetValue(visitTest(ctx->test(1))));
+  // Keyword argument
 }

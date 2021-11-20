@@ -2,20 +2,20 @@
 
 ### 功能部分
 
-- [ ] 变量栈空间管理
+- [x] 变量栈空间管理
 - [ ] 函数定义与调用
 
 ### 表达式解析部分
 
-- [ ] `file_input: (NEWLINE | stmt)* EOF;`
+- [x] `file_input: (NEWLINE | stmt)* EOF;`
   
-- [ ] `funcdef: 'def' NAME parameters ':' suite;`
+- [x] `funcdef: 'def' NAME parameters ':' suite;`
 
-- [ ] `parameters: '(' typedargslist? ')';`
+- [x] `parameters: '(' typedargslist? ')';`
   
-- [ ] `typedargslist: (tfpdef ('=' test)? (',' tfpdef ('=' test)?)*);`
+- [x] `typedargslist: (tfpdef ('=' test)? (',' tfpdef ('=' test)?)*);`
   
-- [ ] `tfpdef: NAME ;`
+- [x] `tfpdef: NAME ;`
 
 - [x] `stmt: simple_stmt | compound_stmt;`
   

@@ -3,8 +3,9 @@
 
 #include "int2048.h"
 using std::string;
+using std::vector;
 
-enum Types { kNone, kBool, kInt, kFloat, kStr };
+enum Types { kNone, kBool, kInt, kFloat, kStr, kTuple };
 
 int2048 FloatToInt(const double &);
 double StringToFloat(const string &);
@@ -17,12 +18,15 @@ class RealAny {
   string str_data;
 
  public:
+  vector<RealAny> tuple;
   Types type = kNone;
   RealAny() = default;
   RealAny(const string &);
   RealAny(const bool &);
   RealAny(const int2048 &);
   RealAny(const double &);
+  RealAny(const vector<RealAny> &);
+  RealAny(const Types &);
 
   bool ToBool() const;
   int2048 ToInt() const;

@@ -10,7 +10,8 @@ using std::pair;
 using std::string;
 using std::unordered_map;
 using std::vector;
-typedef vector<pair<string, RealAny>> ParametersType;
+typedef pair<string, RealAny> ArguType;
+typedef vector<ArguType> ParametersType;
 
 class Variable {
  private:
@@ -20,8 +21,9 @@ class Variable {
 
  public:
   Variable();
-  RealAny &operator[](const string &);
-  bool Find(const string &);  // 用于之后添加报错功能
+  RealAny &LefValue(const string &);    // 用于定义变量
+  RealAny &operator[](const string &);  // 用于取变量的值
+  bool Find(const string &);            // 用于之后添加报错功能
   void AddLevel();
   void DelLevel();
 };

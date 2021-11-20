@@ -5,9 +5,13 @@
 Variable::Variable() : dep(0) {
   stack.push_back(unordered_map<string, RealAny>());
 }
+RealAny &Variable::LefValue(const string &name) {
+  return stack[dep][name];
+}
 RealAny &Variable::operator[](const string &name) {
   if (stack[dep].find(name) != stack[dep].end()) return stack[dep][name];
-  return stack[0][name];  // 假设 Find 过
+  if (stack[0].find(name) != stack[0].end()) return stack[0][name];
+  return stack[dep][name];
 }
 
 bool Variable::Find(const string &name) {
