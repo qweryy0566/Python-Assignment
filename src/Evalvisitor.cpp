@@ -7,15 +7,18 @@ RealAny return_value;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
+// 返回类型为 RealAny &
 static RealAny &GetValue(antlrcpp::Any src) {
   if (src.is<string>()) return variable[src.as<string>()];
   return src.as<RealAny>();
 }
 
+// 无需确定返回类型
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   string name = ctx->NAME()->getText();
   function.Suite(name) = ctx->suite();
@@ -23,11 +26,13 @@ antlrcpp::Any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   return kNormal;
 }
 
+// 返回类型为 ParametersType (vector<pair<string, RealAny>>)
 antlrcpp::Any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
   if (!ctx->typedargslist()) return ParametersType();
   return visitTypedargslist(ctx->typedargslist());
 }
 
+// 返回类型为 ParametersType (vector<pair<string, RealAny>>)
 antlrcpp::Any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
   auto tfpdef_array = ctx->tfpdef();
   auto test_array = ctx->test();
@@ -41,75 +46,89 @@ antlrcpp::Any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContex
   return ans;
 }
 
+// 不会用到
 antlrcpp::Any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
   return ctx->simple_stmt() ? visitSimple_stmt(ctx->simple_stmt())
                             : visitCompound_stmt(ctx->compound_stmt());
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *ctx) {
   return visitSmall_stmt(ctx->small_stmt());
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
   return ctx->flow_stmt() ? visitFlow_stmt(ctx->flow_stmt())
                           : visitExpr_stmt(ctx->expr_stmt());
 }
 
-// No return value!
+// 返回类型为 StmtRes(kNormal)
 antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   auto list_array = ctx->testlist();
-  if (list_array.size() == 1) return visitTestlist(list_array[0]);
-  vector<antlrcpp::Any> left_list, right_list;
-  right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
-  // 初始时 right_list 为最右边的 testlist
-  if (ctx->augassign()) {
-    auto op = ctx->augassign();
-    left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
-    RealAny &lhs = GetValue(left_list[0]), rhs = GetValue(right_list[0]);
-    if (op->ADD_ASSIGN())
-      lhs += rhs;
-    else if (op->SUB_ASSIGN())
-      lhs -= rhs;
-    else if (op->MULT_ASSIGN())
-      lhs *= rhs;
-    else if (op->DIV_ASSIGN())
-      lhs = FloatDiv(lhs, rhs);
-    else if (op->IDIV_ASSIGN())
-      lhs = IntDiv(lhs, rhs);
-    else  // That means MOD_ASSIGN().
-      lhs %= rhs;
-  } else
-    for (int i = list_array.size() - 2; ~i; --i) {
-      left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
-      for (int j = 0; j < left_list.size(); ++j)
-        GetValue(left_list[j]) = GetValue(right_list[j]);
-      // 注意这里的赋值规则和标准 python 略有不同
-      // TODO : 判断非变量与 list 大小不同的情况
-      right_list = left_list;  // 减少 visit 次数
-    }
+  if (list_array.size() == 1)
+    visitTestlist(list_array[0]);
+  else {
+    vector<antlrcpp::Any> left_list, right_list;
+    right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
+    // 初始时 right_list 为最右边的 testlist
+    if (ctx->augassign()) {
+      auto op = ctx->augassign();
+      left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
+      RealAny &lhs = GetValue(left_list[0]), rhs = GetValue(right_list[0]);
+      if (op->ADD_ASSIGN())
+        lhs += rhs;
+      else if (op->SUB_ASSIGN())
+        lhs -= rhs;
+      else if (op->MULT_ASSIGN())
+        lhs *= rhs;
+      else if (op->DIV_ASSIGN())
+        lhs = FloatDiv(lhs, rhs);
+      else if (op->IDIV_ASSIGN())
+        lhs = IntDiv(lhs, rhs);
+      else  // That means MOD_ASSIGN().
+        lhs %= rhs;
+    } else
+      for (int i = list_array.size() - 2; ~i; --i) {
+        left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
+        for (int j = 0; j < left_list.size(); ++j)
+          GetValue(left_list[j]) = GetValue(right_list[j]);
+        // 注意这里的赋值规则和标准 python 略有不同
+        // TODO : 判断非变量与 list 大小不同的情况
+        right_list = left_list;  // 减少 visit 次数
+      }
+  }
   return kNormal;  // 无返回值
 }
 
+// 不会用到
 antlrcpp::Any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 自动 visit
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
   return kBreak;
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {
   return kContinue;
 }
 
+// 将返回值存到 return_value 中
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   vector<RealAny> ans;
   auto list_array = visitTestlist(ctx->testlist()).as<vector<antlrcpp::Any>>();
@@ -118,20 +137,25 @@ antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *c
   return kReturn;
 }
 
+// 自动 visit
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
   auto test_array = ctx->test();
   auto suite_array = ctx->suite();
   int i, elif_size = ctx->ELIF().size();
   for (i = 0; i <= elif_size; ++i)
-    if (GetValue(test_array[i]).ToBool()) return visitSuite(suite_array[i]);
+    if (GetValue(visitTest(test_array[i])).ToBool())
+      return visitSuite(suite_array[i]);
   if (ctx->ELSE()) return visitSuite(suite_array[i]);
   return kNormal;
 }
 
+// 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
   while (GetValue(visitTest(ctx->test())).ToBool()) {
     StmtRes result = visitSuite(ctx->suite()).as<StmtRes>();
@@ -156,10 +180,12 @@ antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
 }
 
 // 可能 test 是一个 testlist (函数返回值)
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   return visitOr_test(ctx->or_test());
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   bool ans = false;
   auto and_test = ctx->and_test();
@@ -171,6 +197,7 @@ antlrcpp::Any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   return RealAny(false);  // different to real python
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   bool ans = true;
   auto not_test = ctx->not_test();
@@ -182,11 +209,13 @@ antlrcpp::Any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   return RealAny(true);  // different to real python
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
   if (ctx->comparison()) return visitComparison(ctx->comparison());
   return (RealAny)!GetValue(visitNot_test(ctx->not_test()));
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
   auto arith_array = ctx->arith_expr();
   if (arith_array.size() == 1) return visitArith_expr(arith_array[0]);
@@ -207,11 +236,12 @@ antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx
   return RealAny(true);
 }
 
+// 不会用到
 antlrcpp::Any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
-// 返回类型为 RealAny
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
   auto term_array = ctx->term();  // 该类的 vector
   if (term_array.size() == 1) return visitTerm(term_array[0]);
@@ -227,10 +257,12 @@ antlrcpp::Any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx
   return ans;
 }
 
+// 不会用到
 antlrcpp::Any EvalVisitor::visitAddorsub_op(Python3Parser::Addorsub_opContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   auto factor_array = ctx->factor();  // 该类的 vector
   if (factor_array.size() == 1) return visitFactor(factor_array[0]);
@@ -253,10 +285,12 @@ antlrcpp::Any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   return ans;
 }
 
+// 不会用到
 antlrcpp::Any EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
   if (ctx->atom_expr()) return visitAtom_expr(ctx->atom_expr());
   if (ctx->ADD())
@@ -265,7 +299,8 @@ antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     return -GetValue(visitFactor(ctx->factor()));
 }
 
-// atom_expr: atom trailer?;
+// 函数调用
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   // 函数都有 RealAny 类型的返回值
   if (!ctx->trailer()) return visitAtom(ctx->atom());
@@ -308,12 +343,14 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
   }
 }
 
+// 返回类型为 ParametersType (vector<pair<string, RealAny>>)
 antlrcpp::Any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   if (!ctx->arglist()) return ParametersType();
   return visitArglist(ctx->arglist());  // visit 即可，上级会 as
 }
 
-// atom: (NAME | NUMBER | STRING+| 'None' | 'True' | 'False' | ('(' test ')'));
+// 注意有加括号回指 test
+// 返回类型为 RealAny(可能为 tuple) 或 string
 antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   if (ctx->NUMBER()) {
     string str = ctx->NUMBER()->getText();
@@ -344,7 +381,7 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   }
 }
 
-// testlist: test (',' test)* (',')?
+// 返回类型为 vector<antlrcpp::Any>
 antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   vector<antlrcpp::Any> ans;  // 用好两种 Any 类
   auto test_array = ctx->test();
@@ -361,6 +398,7 @@ antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   return ans;
 }
 
+// 返回类型为 ParametersType (vector<pair<string, RealAny>>)
 antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   ParametersType list_array;
   auto argument_array = ctx->argument();
@@ -378,7 +416,7 @@ antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
 }
 
 // 此处发生 antlrcpp::Any -> RealAny 转换
-// return type : ArguType (pair<string, RealAny>)
+// 返回类型为 ArguType (pair<string, RealAny>)
 antlrcpp::Any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
   if (!ctx->ASSIGN()) return make_pair(string(), GetValue(visitTest(ctx->test(0))));
   // Positional argument
