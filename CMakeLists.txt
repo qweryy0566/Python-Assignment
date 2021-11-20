@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(python_interpreter)
-set(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Ofast")
+set(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
 include_directories(
         ${PROJECT_SOURCE_DIR}/generated/
         ${PROJECT_SOURCE_DIR}/third_party/
@@ -16,8 +16,7 @@ set(src_dir
         src/Evalvisitor.cpp
         src/int2048.cpp
         src/real_any.cpp
-        src/variable.cpp
-        src/function.cpp
+        src/scope.cpp
         )
 file(GLOB antlr4-cpp-src
         ${PROJECT_SOURCE_DIR}/third_party/runtime/src/*.cpp

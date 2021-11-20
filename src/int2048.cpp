@@ -3,7 +3,7 @@
 bool int2048::IsZero() const {
   return num.size() == 1 && !num[0];
 }
-int2048::int2048(const std::string &s) {
+int2048::int2048(const string &s) {
   Read(s);
 }
 int2048::int2048(const long long &x) {
@@ -25,7 +25,7 @@ int2048::operator bool() const {
   return !IsZero();
 }
 
-void int2048::Read(const std::string &s) {
+void int2048::Read(const string &s) {
   // TODO 是否存在 +3 情况
   num.clear();
   int s_len = s.length() - 1, bound = s[0] == '+' || s[0] == '-';
@@ -155,7 +155,7 @@ int2048 operator%(const int2048 &lhs, const int2048 &rhs) {
 }
 
 std::istream &operator>>(std::istream &lhs, int2048 &rhs) {
-  std::string s;
+  string s;
   lhs >> s, rhs.Read(s);
   return lhs;
 }

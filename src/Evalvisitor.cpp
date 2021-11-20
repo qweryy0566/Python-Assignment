@@ -1,33 +1,45 @@
 #include "Evalvisitor.h"
 
 Variable variable;
+Function function;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
 static RealAny &GetValue(antlrcpp::Any src) {
-  if (src.is<std::string>()) return variable[src.as<std::string>()];
+  if (src.is<string>()) return variable[src.as<string>()];
   return src.as<RealAny>();
 }
 
 antlrcpp::Any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
-  return visitChildren(ctx);
+  return visitChildren(ctx);  // Done.
 }
 
 antlrcpp::Any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
-  return visitChildren(ctx);
+  string name = ctx->NAME()->getText();
+  function.Suite(name) = ctx->suite();
+  function.Parameters(name) = visitParameters(ctx->parameters()).as<ParametersType>();
+  return kNormal;
 }
 
 antlrcpp::Any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
-  if (!ctx->typedargslist()) return 0;
+  if (!ctx->typedargslist()) return ParametersType();
   return visitTypedargslist(ctx->typedargslist());
 }
 
 antlrcpp::Any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
-  return visitChildren(ctx);
+  auto tfpdef_array = ctx->tfpdef();
+  auto test_array = ctx->test();
+  ParametersType ans;
+  for (int i = 0, j = test_array.size() - tfpdef_array.size(); i < tfpdef_array.size(); ++i) {
+    RealAny default_val;
+    if (i + j >= 0) default_val = GetValue(visitTest(test_array[i + j]));
+    ans.push_back(make_pair(tfpdef_array[i]->NAME()->getText(), default_val));
+  }
+  return ans;
 }
 
 antlrcpp::Any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
-  return visitChildren(ctx);
+  return visitChildren(ctx);  // Done.
 }
 
 antlrcpp::Any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
@@ -48,12 +60,12 @@ antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx
 antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   auto list_array = ctx->testlist();
   if (list_array.size() == 1) return visitTestlist(list_array[0]);
-  std::vector<antlrcpp::Any> left_list, right_list;
-  right_list = visitTestlist(list_array.back()).as<std::vector<antlrcpp::Any>>();
+  vector<antlrcpp::Any> left_list, right_list;
+  right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
   // 初始时 right_list 为最右边的 testlist
   if (ctx->augassign()) {
     auto op = ctx->augassign();
-    left_list = visitTestlist(list_array[0]).as<std::vector<antlrcpp::Any>>();
+    left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
     RealAny &lhs = GetValue(left_list[0]), rhs = GetValue(right_list[0]);
     if (op->ADD_ASSIGN())
       lhs += rhs;
@@ -69,7 +81,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
       lhs %= rhs;
   } else
     for (int i = list_array.size() - 2; ~i; --i) {
-      left_list = visitTestlist(list_array[i]).as<std::vector<antlrcpp::Any>>();
+      left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
       for (int j = 0; j < left_list.size(); ++j)
         GetValue(left_list[j]) = GetValue(right_list[j]);
       // TODO : 判断非变量与 list 大小不同的情况
@@ -160,7 +172,7 @@ antlrcpp::Any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx
   RealAny lhs = GetValue(visitArith_expr(arith_array[0])), rhs;
   for (int i = 1; i < arith_array.size(); ++i) {
     rhs = GetValue(visitArith_expr(arith_array[i]));
-    std::string op_str = op_array[i - 1]->getText();
+    string op_str = op_array[i - 1]->getText();
     if (op_str == "<" && !(lhs < rhs) ||
         op_str == ">" && !(lhs > rhs) ||
         op_str == "==" && !(lhs == rhs) ||
@@ -235,8 +247,8 @@ antlrcpp::Any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
 antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   // 函数都有 RealAny 类型的返回值
   if (!ctx->trailer()) return visitAtom(ctx->atom());
-  auto list_array = visitTrailer(ctx->trailer()).as<std::vector<RealAny>>();
-  std::string func_name = ctx->atom()->getText();
+  auto list_array = visitTrailer(ctx->trailer()).as<vector<RealAny>>();
+  string func_name = ctx->atom()->getText();
   // CheckBuiltin
   if (func_name == "print") {
     for (auto it : list_array) std::cout << it << ' ';
@@ -247,7 +259,7 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
   else if (func_name == "float")
     return RealAny(list_array.empty() ? double() : list_array[0].ToFloat());
   else if (func_name == "str")
-    return RealAny(list_array.empty() ? std::string() : list_array[0].ToStr());
+    return RealAny(list_array.empty() ? string() : list_array[0].ToStr());
   else if (func_name == "bool")
     return RealAny(list_array.empty() ? bool() : list_array[0].ToBool());
   else                          // other defined function
@@ -255,16 +267,16 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
 }
 
 antlrcpp::Any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
-  if (!ctx->arglist()) return std::vector<RealAny>();
+  if (!ctx->arglist()) return vector<RealAny>();
   return visitArglist(ctx->arglist());  // visit 即可，上级会 as
 }
 
 // atom: (NAME | NUMBER | STRING+| 'None' | 'True' | 'False' | ('(' test ')'));
 antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   if (ctx->NUMBER()) {
-    std::string str = ctx->NUMBER()->getText();
+    string str = ctx->NUMBER()->getText();
     // https://en.cppreference.com/w/cpp/string/basic_string/npos
-    if (str.find('.') == std::string::npos)
+    if (str.find('.') == string::npos)
       return RealAny(int2048(str));
     else
       return RealAny(StringToFloat(str));
@@ -280,10 +292,10 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   else if (ctx->test())
     return visitTest(ctx->test());
   else {  // That means STRING+.
-    std::string ans;
+    string ans;
     auto str_array = ctx->STRING();
     for (auto it : str_array) {
-      std::string tmp = it->getText();
+      string tmp = it->getText();
       tmp.pop_back(), ans += tmp.substr(1);
     }
     return RealAny(ans);
@@ -293,14 +305,14 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
 // testlist: test (',' test)* (',')?;
 // TODO : What does the (',')? mean ??
 antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
-  std::vector<antlrcpp::Any> ans;  // 用好两种 Any 类
+  vector<antlrcpp::Any> ans;  // 用好两种 Any 类
   auto test_array = ctx->test();
   for (auto it : test_array) ans.push_back(visitTest(it));
   return ans;
 }
 
 antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
-  std::vector<RealAny> list_array;
+  vector<RealAny> list_array;
   // TODO : 返回类型可能需要修改
   auto argument_array = ctx->argument();
   for (auto it : argument_array)

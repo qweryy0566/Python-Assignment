@@ -9,6 +9,7 @@
 #include <vector>
 using std::max;
 using std::min;
+using std::string;
 
 const int kBase = 1e8, kBit = 8;
 const int kPow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000};
@@ -25,12 +26,12 @@ class int2048 {
   // 构造函数。其实可以加 explicit 规定所有转换，简化代码。
   int2048() = default;
   int2048(const long long &x);
-  int2048(const std::string &s);
+  int2048(const string &s);
   int2048(const int2048 &) = default;
   explicit operator double() const;
   explicit operator bool() const;
 
-  void Read(const std::string &s);
+  void Read(const string &s);
   friend int2048 Abs(int2048 ans);
   friend int2048 FloatToInt(const double &);
 

@@ -1,11 +1,11 @@
 #include "real_any.h"
 
 int2048 FloatToInt(const double &src) {
-  std::string tmp = std::to_string(src);
+  string tmp = std::to_string(src);
   tmp.resize(tmp.length() - 7);  // 默认有 6 位小数
   return int2048(tmp);
 }
-double StringToFloat(const std::string &s) {
+double StringToFloat(const string &s) {
   bool is_negative = 0;
   double ans = 0, p = 0.1;
   auto it = s.begin();
@@ -18,7 +18,7 @@ double StringToFloat(const std::string &s) {
   return is_negative ? -ans : ans;
 }
 
-RealAny::RealAny(const std::string &rhs) {
+RealAny::RealAny(const string &rhs) {
   str_data = rhs, type = kStr;
 }
 RealAny::RealAny(const bool &rhs) {
@@ -55,7 +55,7 @@ double RealAny::ToFloat() const {
     case kStr: return StringToFloat(str_data);
   }
 }
-std::string RealAny::ToStr() const {
+string RealAny::ToStr() const {
   switch (type) {
     case kBool: return std::to_string(bool_data);
     case kInt: {
@@ -115,7 +115,7 @@ RealAny operator*(const RealAny &lhs, const RealAny &rhs) {
       ans.float_data = lhs.ToFloat() * rhs.ToFloat(); break;
     default: {  // That means kStr
       int2048 cnt;
-      std::string str;
+      string str;
       if (lhs.type == kStr)
         str = lhs.str_data, cnt = rhs.ToInt();
       else

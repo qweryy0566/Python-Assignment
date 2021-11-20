@@ -2,23 +2,24 @@
 #define PYTHON_INTERPRETER_REAL_ANY_H
 
 #include "int2048.h"
+using std::string;
 
 enum Types { kNone, kBool, kInt, kFloat, kStr };
 
 int2048 FloatToInt(const double &);
-double StringToFloat(const std::string &);
+double StringToFloat(const string &);
 
 class RealAny {
  private:
   bool bool_data = 0;
   int2048 int_data = 0;
   double float_data = 0;
-  std::string str_data;
+  string str_data;
 
  public:
   Types type = kNone;
   RealAny() = default;
-  RealAny(const std::string &);
+  RealAny(const string &);
   RealAny(const bool &);
   RealAny(const int2048 &);
   RealAny(const double &);
@@ -26,7 +27,7 @@ class RealAny {
   bool ToBool() const;
   int2048 ToInt() const;
   double ToFloat() const;
-  std::string ToStr() const;
+  string ToStr() const;
 
   const RealAny operator-() const;
   RealAny &operator+=(const RealAny &rhs);
