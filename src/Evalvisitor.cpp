@@ -337,7 +337,8 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
       string var_name;
       RealAny value;
       if (i < list_size) {
-        var_name = list_array[i].first.empty() ? para_array[i].first : list_array[i].first;
+        var_name = list_array[i].first.empty() ? para_array[i].first
+                                               : list_array[i].first;
         value = list_array[i].second;
       } else {
         var_name = para_array[i].first;
