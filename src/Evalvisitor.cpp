@@ -51,10 +51,10 @@ antlrcpp::Any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   return visitChildren(ctx);  // Done.
 }
 
+// 自动 visit
 // 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
-  return ctx->simple_stmt() ? visitSimple_stmt(ctx->simple_stmt())
-                            : visitCompound_stmt(ctx->compound_stmt());
+  return visitChildren(ctx);  // Done.
 }
 
 // 返回类型为 StmtRes
@@ -62,10 +62,10 @@ antlrcpp::Any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *c
   return visitSmall_stmt(ctx->small_stmt());
 }
 
+// 自动 visit
 // 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
-  return ctx->flow_stmt() ? visitFlow_stmt(ctx->flow_stmt())
-                          : visitExpr_stmt(ctx->expr_stmt());
+  return visitChildren(ctx);  // Done.
 }
 
 // 返回类型为 StmtRes(kNormal)
@@ -166,7 +166,7 @@ antlrcpp::Any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
 // 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
   while (GetValue(visitTest(ctx->test())).ToBool()) {
-    StmtRes result = visitSuite(ctx->suite()).as<StmtRes>();
+    auto result = visitSuite(ctx->suite()).as<StmtRes>();
     if (result == kBreak)
       break;
     else if (result == kReturn)
