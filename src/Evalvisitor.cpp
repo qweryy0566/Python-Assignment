@@ -367,7 +367,7 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     if (str.find('.') == string::npos)
       return RealAny(int2048(str));
     else
-      return RealAny(StringToFloat(str));
+      return RealAny(std::stod(str));
   } else if (ctx->NAME()) {
     // TODO : 判断变量是否定义过
     return ctx->NAME()->getText();  // 返回字符串形式，便于上级区分
