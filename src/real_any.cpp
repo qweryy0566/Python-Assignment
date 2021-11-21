@@ -9,10 +9,8 @@ double StringToFloat(const string &s) {
   bool is_negative = 0;
   double ans = 0, p = 0.1;
   auto it = s.begin();
-  if (*it == '+' || *it == '-') {  // TODO 是否存在 +3 情况
-    if (*it == '-') is_negative = 1;
-    ++it;
-  }
+  if (*it == '+' || *it == '-')
+    if (*it++ == '-') is_negative = 1;
   for (; *it != '.'; ++it) ans = ans * 10.0 + *it - '0';
   for (++it; it != s.end(); ++it, p *= 0.1) ans += (*it - '0') * p;
   return is_negative ? -ans : ans;
@@ -44,6 +42,7 @@ bool RealAny::ToBool() const {
     case kFloat: return float_data;
     case kStr: return !str_data.empty();
     case kTuple: return tuple.size();
+    default: return false;
   }
 }
 int2048 RealAny::ToInt() const {
@@ -52,6 +51,7 @@ int2048 RealAny::ToInt() const {
     case kInt: return int_data;
     case kFloat: return FloatToInt(float_data);
     case kStr: return str_data;
+    default: return int2048(0);
   }
 }
 double RealAny::ToFloat() const {
@@ -60,6 +60,7 @@ double RealAny::ToFloat() const {
     case kInt: return (double)int_data;
     case kFloat: return float_data;
     case kStr: return StringToFloat(str_data);
+    default: return 0;
   }
 }
 string RealAny::ToStr() const {
@@ -104,6 +105,7 @@ RealAny operator-(const RealAny &lhs, const RealAny &rhs) {
       ans.int_data = lhs.ToInt() - rhs.ToInt(); break;
     case kFloat:
       ans.float_data = lhs.ToFloat() - rhs.ToFloat(); break;
+    default: break;  // TODO : 减法的非法类型报错
   }
   return ans;
 }
@@ -182,12 +184,13 @@ bool operator&&(const RealAny &lhs, const RealAny &rhs) {
   return lhs.ToBool() && rhs.ToBool();
 }
 bool operator==(const RealAny &lhs, const RealAny &rhs) {
+  // None == False is false.
+  Types check = std::max(lhs.type, rhs.type);
+  if (check <= kFloat) return !(lhs < rhs) && !(rhs < lhs);
   if (lhs.type != rhs.type) return false;
-  switch (lhs.type) {
-    case kBool: return lhs.bool_data == rhs.bool_data;
-    case kInt: return lhs.int_data == rhs.int_data;
-    case kFloat: return lhs.float_data == rhs.float_data;
-    case kStr: return lhs.str_data == rhs.str_data;
+  switch (check) {
+    case kStr:
+      return lhs.str_data == rhs.str_data;
     // TODO : other type
     default: return true;  // NoneType
   }

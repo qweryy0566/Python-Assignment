@@ -5,7 +5,7 @@
 using std::string;
 using std::vector;
 
-enum Types { kNone, kBool, kInt, kFloat, kStr, kTuple };
+enum Types { kBool, kInt, kFloat, kStr, kTuple, kNone };
 
 int2048 FloatToInt(const double &);
 double StringToFloat(const string &);

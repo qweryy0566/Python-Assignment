@@ -1,8 +1,6 @@
 #ifndef PYTHON_INTERPRETER_SCOPE_H
 #define PYTHON_INTERPRETER_SCOPE_H
 
-#include <unordered_map>
-
 #include "Python3BaseVisitor.h"
 #include "real_any.h"
 using std::make_pair;

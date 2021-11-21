@@ -317,7 +317,8 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
   string func_name = ctx->atom()->getText();  // 函数名
   // Check_BuiltinFunction
   if (func_name == "print") {
-    for (auto it : list_array) std::cout << it.second << ' ';
+    for (int i = 0; i < list_array.size(); ++i)
+      std::cout << (i ? " " : "") << list_array[i].second;
     std::cout << '\n';
     return RealAny();  // 返回值为 None
   } else if (func_name == "int")
