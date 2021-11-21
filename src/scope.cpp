@@ -5,7 +5,7 @@
 Variable::Variable() : dep(0) {
   stack.push_back(unordered_map<string, RealAny>());
 }
-RealAny &Variable::LefValue(const string &name) {
+RealAny &Variable::LeftValue(const string &name) {
   return stack[dep][name];
 }
 RealAny &Variable::operator[](const string &name) {

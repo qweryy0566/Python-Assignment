@@ -1,7 +1,7 @@
 #ifndef PYTHON_INTERPRETER_SCOPE_H
 #define PYTHON_INTERPRETER_SCOPE_H
 
-#include "Python3BaseVisitor.h"
+#include "Python3Parser.h"
 #include "real_any.h"
 using std::make_pair;
 using std::pair;
@@ -19,7 +19,7 @@ class Variable {
 
  public:
   Variable();
-  RealAny &LefValue(const string &);    // 用于定义变量
+  RealAny &LeftValue(const string &);   // 用于定义变量
   RealAny &operator[](const string &);  // 用于取变量的值
   bool Find(const string &);            // 用于之后添加报错功能
   void AddLevel();
@@ -29,7 +29,7 @@ class Variable {
 class Function {
  private:
   unordered_map<string, Python3Parser::SuiteContext *> suite;
-  unordered_map<string, vector<std::pair<string, RealAny>>> parameters;
+  unordered_map<string, ParametersType> parameters;
 
  public:
   Python3Parser::SuiteContext *&Suite(const string &);

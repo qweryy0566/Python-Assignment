@@ -121,8 +121,8 @@ RealAny operator*(const RealAny &lhs, const RealAny &rhs) {
     case kFloat:
       ans.float_data = lhs.ToFloat() * rhs.ToFloat(); break;
     default: {  // That means kStr
-      int2048 cnt;
       string str;
+      int2048 cnt;
       if (lhs.type == kStr)
         str = lhs.str_data, cnt = rhs.ToInt();
       else
@@ -163,11 +163,10 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
     // 本题要求 6 位
     case kStr: lhs << rhs.str_data; break;
     case kTuple:  // 添加 tuple 功能
-      // lhs << '(';
+      lhs << '(';
       for (int i = 0; i < rhs.tuple.size(); ++i)
-        // lhs << (i ? " " : "") << rhs.tuple[i] << ',';
-        lhs << (i ? " " : "") << rhs.tuple[i];
-      // lhs << ')';
+        lhs << (i ? " " : "") << rhs.tuple[i] << ',';
+      lhs << ')';
       break;
   }
   return lhs;

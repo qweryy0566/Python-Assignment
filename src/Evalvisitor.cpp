@@ -181,7 +181,7 @@ antlrcpp::Any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   if (ctx->simple_stmt()) return visitSimple_stmt(ctx->simple_stmt());
   auto stmt_array = ctx->stmt();
   for (auto it : stmt_array) {
-    StmtRes result = visitStmt(it).as<StmtRes>();
+    auto result = visitStmt(it).as<StmtRes>();
     if (result) return result;
   }
   return kNormal;
@@ -330,7 +330,6 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
   else if (func_name == "bool")
     return RealAny(list_array.empty() ? bool() : list_array[0].second.ToBool());
   else {  // other defined function
-          // TODO : 调用用户定义的函数
     variable.AddLevel();
     auto para_array = function.Parameters(func_name);
     int list_size = list_array.size(), para_size = para_array.size();
@@ -345,7 +344,7 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
         var_name = para_array[i].first;
         value = para_array[i].second;
       }
-      variable.LefValue(var_name) = value;
+      variable.LeftValue(var_name) = value;
     }
     visitSuite(function.Suite(func_name));
     variable.DelLevel();
@@ -428,8 +427,8 @@ antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
 // 此处发生 antlrcpp::Any -> RealAny 转换
 // 返回类型为 ArguType (pair<string, RealAny>)
 antlrcpp::Any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
-  if (!ctx->ASSIGN()) return make_pair(string(), GetValue(visitTest(ctx->test(0))));
   // Positional argument
-  return make_pair(ctx->test(0)->getText(), GetValue(visitTest(ctx->test(1))));
+  if (!ctx->ASSIGN()) return make_pair(string(), GetValue(visitTest(ctx->test(0))));
   // Keyword argument
+  return make_pair(ctx->test(0)->getText(), GetValue(visitTest(ctx->test(1))));
 }

@@ -6,6 +6,7 @@ using std::string;
 using std::vector;
 
 enum Types { kBool, kInt, kFloat, kStr, kTuple, kNone };
+// NoneType 较为特殊，应放在最后
 
 int2048 FloatToInt(const double &);
 double StringToFloat(const string &);
