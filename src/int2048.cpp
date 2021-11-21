@@ -138,7 +138,7 @@ int2048 operator/(int2048 lhs, const int2048 &rhs) {
       ans.num[i] = l, div -= Times(l, rhs);
       for (int j = 0; j < div.num.size(); ++j)
         lhs.num[i + j] = div.num[j];
-      lhs.num.resize(i + div.num.size());
+      lhs.num.resize(i + div.num.size() * !div.IsZero());
       i = (int)lhs.num.size() - (int)rhs.num.size() + 1;
     }
   }
