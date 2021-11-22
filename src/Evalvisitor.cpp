@@ -104,7 +104,8 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
         for (int j = 0; j < left_list.size(); ++j)
           GetValue(left_list[j]) = val_array[j];
         // 注意这里的赋值规则和标准 python 略有不同
-        // TODO : 判断非变量与 list 大小不同的情况
+        // 1. 赋值结合性认为和 C++ 一致（python 会从左到右计算后再从左到右赋值）
+        // 2. 认为函数里的赋值语句在找不到全局变量后再新定义变量
         right_list = left_list;  // 减少 visit 次数
       }
   }
