@@ -80,7 +80,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     if (ctx->augassign()) {
       auto op = ctx->augassign();
       left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
-      RealAny &lhs = GetValue(left_list[0]), rhs = GetValue(right_list[0]);
+      RealAny rhs = GetValue(right_list[0]), &lhs = GetValue(left_list[0]);
       if (op->ADD_ASSIGN())
         lhs += rhs;
       else if (op->SUB_ASSIGN())
@@ -96,8 +96,13 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     } else
       for (int i = list_array.size() - 2; ~i; --i) {
         left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
+        vector<RealAny> val_array;
+        // 注意：必须提前算好值。
+        // 例子：a, b = b, a
+        for (int j = 0; j < right_list.size(); ++j)
+          val_array.push_back(GetValue(right_list[j]));
         for (int j = 0; j < left_list.size(); ++j)
-          GetValue(left_list[j]) = GetValue(right_list[j]);
+          GetValue(left_list[j]) = val_array[j];
         // 注意这里的赋值规则和标准 python 略有不同
         // TODO : 判断非变量与 list 大小不同的情况
         right_list = left_list;  // 减少 visit 次数
