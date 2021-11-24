@@ -14,9 +14,9 @@ RealAny &Variable::operator[](const string &name) {
   return stack[dep][name];
 }
 
+// 查看局部内是否被定义
 bool Variable::Find(const string &name) {
-  return stack[dep].find(name) != stack[dep].end() ||
-         stack[0].find(name) != stack[0].end();
+  return stack[dep].find(name) != stack[dep].end();
 }
 void Variable::AddLevel() {
   ++dep, stack.push_back(unordered_map<string, RealAny>());

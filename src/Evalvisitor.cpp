@@ -1,9 +1,9 @@
 #include "Evalvisitor.h"
 
-Variable variable;
-Function function;
+static Variable variable;
+static Function function;
 // 利用栈的性质，只需保存当前的返回值
-RealAny return_value;
+static RealAny return_value;
 enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 
 // To check if it is a variable. If so, return the value of it.
@@ -75,28 +75,32 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     visitTestlist(list_array[0]);
   else {
     vector<antlrcpp::Any> left_list, right_list;
+    vector<RealAny> val_array;
     right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
     // 初始时 right_list 为最右边的 testlist
     if (ctx->augassign()) {
       auto op = ctx->augassign();
       left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
-      RealAny rhs = GetValue(right_list[0]), &lhs = GetValue(left_list[0]);
-      if (op->ADD_ASSIGN())
-        lhs += rhs;
-      else if (op->SUB_ASSIGN())
-        lhs -= rhs;
-      else if (op->MULT_ASSIGN())
-        lhs *= rhs;
-      else if (op->DIV_ASSIGN())
-        lhs = FloatDiv(lhs, rhs);
-      else if (op->IDIV_ASSIGN())
-        lhs = IntDiv(lhs, rhs);
-      else  // That means MOD_ASSIGN().
-        lhs %= rhs;
+      for (int i = 0; i < right_list.size(); ++i)
+        val_array.push_back(GetValue(right_list[i]));
+      for (int i = 0; i < left_list.size(); ++i) {
+        RealAny &lhs = GetValue(left_list[i]), &rhs = val_array[i];
+        if (op->ADD_ASSIGN())
+          lhs += rhs;
+        else if (op->SUB_ASSIGN())
+          lhs -= rhs;
+        else if (op->MULT_ASSIGN())
+          lhs *= rhs;
+        else if (op->DIV_ASSIGN())
+          lhs = FloatDiv(lhs, rhs);
+        else if (op->IDIV_ASSIGN())
+          lhs = IntDiv(lhs, rhs);
+        else  // That means MOD_ASSIGN().
+          lhs %= rhs;
+      }
     } else
       for (int i = list_array.size() - 2; ~i; --i) {
         left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
-        vector<RealAny> val_array;
         // 注意：必须提前算好值。
         // 例子：a, b = b, a
         for (int j = 0; j < right_list.size(); ++j)
@@ -339,18 +343,17 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
     variable.AddLevel();
     auto para_array = function.Parameters(func_name);
     int list_size = list_array.size(), para_size = para_array.size();
-    for (int i = 0; i < para_size; ++i) {
-      string var_name;
-      RealAny value;
-      if (i < list_size) {
-        var_name = list_array[i].first.empty() ? para_array[i].first
-                                               : list_array[i].first;
-        value = list_array[i].second;
-      } else {
-        var_name = para_array[i].first;
-        value = para_array[i].second;
-      }
+    string var_name;
+    RealAny value;
+    for (int i = 0; i < list_size; ++i) {
+      var_name = list_array[i].first.empty() ? para_array[i].first
+                                             : list_array[i].first;
+      value = list_array[i].second;
       variable.LeftValue(var_name) = value;
+    }
+    for (int i = 0; i < para_size; ++i) {
+      var_name = para_array[i].first, value = para_array[i].second;
+      if (!variable.Find(var_name)) variable.LeftValue(var_name) = value;
     }
     visitSuite(function.Suite(func_name));
     variable.DelLevel();
