@@ -1,5 +1,5 @@
-#ifndef PYTHON_INTERPRETER_INTEGER_H
-#define PYTHON_INTERPRETER_INTEGER_H
+#ifndef PYTHON_INTERPRETER_INTEGER_H_
+#define PYTHON_INTERPRETER_INTEGER_H_
 
 #include <algorithm>
 #include <cstdio>

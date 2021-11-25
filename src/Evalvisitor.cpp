@@ -76,40 +76,36 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
   else {
     vector<antlrcpp::Any> left_list, right_list;
     vector<RealAny> val_array;
-    right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
     // 初始时 right_list 为最右边的 testlist
-    if (ctx->augassign()) {
+    right_list = visitTestlist(list_array.back()).as<vector<antlrcpp::Any>>();
+    // 注意：必须提前算好值。
+    // 例子：a, b = b, a
+    for (int i = 0; i < right_list.size(); ++i)
+      val_array.push_back(GetValue(right_list[i]));
+     if (ctx->augassign()) {
       auto op = ctx->augassign();
       left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
-      for (int i = 0; i < right_list.size(); ++i)
-        val_array.push_back(GetValue(right_list[i]));
-      for (int i = 0; i < left_list.size(); ++i) {
-        RealAny &lhs = GetValue(left_list[i]), &rhs = val_array[i];
-        if (op->ADD_ASSIGN())
-          lhs += rhs;
-        else if (op->SUB_ASSIGN())
-          lhs -= rhs;
-        else if (op->MULT_ASSIGN())
-          lhs *= rhs;
-        else if (op->DIV_ASSIGN())
-          lhs = FloatDiv(lhs, rhs);
-        else if (op->IDIV_ASSIGN())
-          lhs = IntDiv(lhs, rhs);
-        else  // That means MOD_ASSIGN().
-          lhs %= rhs;
-      }
+      RealAny &lhs = GetValue(left_list[0]);
+      if (op->ADD_ASSIGN())
+        lhs += val_array[0];
+      else if (op->SUB_ASSIGN())
+        lhs -= val_array[0];
+      else if (op->MULT_ASSIGN())
+        lhs *= val_array[0];
+      else if (op->DIV_ASSIGN())
+        lhs = FloatDiv(lhs, val_array[0]);
+      else if (op->IDIV_ASSIGN())
+        lhs = IntDiv(lhs, val_array[0]);
+      else  // That means MOD_ASSIGN().
+        lhs %= val_array[0];
     } else
       for (int i = list_array.size() - 2; ~i; --i) {
         left_list = visitTestlist(list_array[i]).as<vector<antlrcpp::Any>>();
-        // 注意：必须提前算好值。
-        // 例子：a, b = b, a
-        for (int j = 0; j < right_list.size(); ++j)
-          val_array.push_back(GetValue(right_list[j]));
-        for (int j = 0; j < left_list.size(); ++j)
-          GetValue(left_list[j]) = val_array[j];
         // 注意这里的赋值规则和标准 python 略有不同
         // 1. 赋值结合性认为和 C++ 一致（python 会从左到右计算后再从左到右赋值）
         // 2. 认为函数里的赋值语句在找不到全局变量后再新定义变量
+        for (int j = 0; j < left_list.size(); ++j)
+          GetValue(left_list[j]) = val_array[j];
         right_list = left_list;  // 减少 visit 次数
       }
   }
@@ -141,7 +137,7 @@ antlrcpp::Any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContex
 // 返回类型为 StmtRes
 antlrcpp::Any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   if (!ctx->testlist())
-    return_value = RealAny(kNone);
+    return_value = RealAny();
   else {
     auto list_array = visitTestlist(ctx->testlist()).as<vector<antlrcpp::Any>>();
     if (list_array.size() == 1)
@@ -408,7 +404,7 @@ antlrcpp::Any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
     antlrcpp::Any tmp = visitTest(it);
     // 在 testlist 和 arglist 处将 tuple 解包装 
     if (tmp.is<RealAny>() && tmp.as<RealAny>().type == kTuple) {
-      auto tuple_array = tmp.as<RealAny>().tuple;
+      auto tuple_array = tmp.as<RealAny>().array;
       for (auto j : tuple_array) ans.push_back(j);
     } else {
       ans.push_back(tmp);
@@ -425,7 +421,7 @@ antlrcpp::Any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
     // 在 testlist 和 arglist 处将 tuple 解包装
     auto tmp = visitArgument(it).as<ArguType>();
     if (tmp.second.type == kTuple) {
-      auto tuple_array = tmp.second.tuple;
+      auto tuple_array = tmp.second.array;
       for (auto j : tuple_array) list_array.push_back(make_pair(string(), j));
     } else {
       list_array.push_back(tmp);

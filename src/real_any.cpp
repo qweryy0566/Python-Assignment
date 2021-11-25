@@ -19,10 +19,7 @@ RealAny::RealAny(const double &rhs) {
   float_data = rhs, type = kFloat;
 }
 RealAny::RealAny(const vector<RealAny> &rhs) {
-  tuple = rhs, type = kTuple;
-}
-RealAny::RealAny(const Types &rhs) {
-  type = rhs;
+  array = rhs, type = kTuple;
 }
 
 bool RealAny::ToBool() const {
@@ -31,7 +28,7 @@ bool RealAny::ToBool() const {
     case kInt: return (bool)int_data;
     case kFloat: return float_data;
     case kStr: return !str_data.empty();
-    case kTuple: return tuple.size();
+    case kTuple: return array.size();
     default: return false;
   }
 }
@@ -78,8 +75,8 @@ RealAny operator+(const RealAny &lhs, const RealAny &rhs) {
       ans.str_data = lhs.str_data + rhs.str_data; break;
     default:  // That means kTuple.
       if (lhs.type != rhs.type) break;
-      ans.tuple.insert(ans.tuple.end(), lhs.tuple.begin(), lhs.tuple.end());
-      ans.tuple.insert(ans.tuple.end(), rhs.tuple.begin(), rhs.tuple.end());
+      ans.array.insert(ans.array.end(), lhs.array.begin(), lhs.array.end());
+      ans.array.insert(ans.array.end(), rhs.array.begin(), rhs.array.end());
       // TODO 非法
   }
   return ans;
@@ -154,8 +151,8 @@ std::ostream &operator<<(std::ostream &lhs, RealAny rhs) {
     case kStr: lhs << rhs.str_data; break;
     case kTuple:  // 添加 tuple 功能
       lhs << '(';
-      for (int i = 0; i < rhs.tuple.size(); ++i)
-        lhs << (i ? " " : "") << rhs.tuple[i] << ',';
+      for (int i = 0; i < rhs.array.size(); ++i)
+        lhs << (i ? " " : "") << rhs.array[i] << ',';
       lhs << ')';
       break;
   }

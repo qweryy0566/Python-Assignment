@@ -1,5 +1,5 @@
-#ifndef PYTHON_INTERPRETER_SCOPE_H
-#define PYTHON_INTERPRETER_SCOPE_H
+#ifndef PYTHON_INTERPRETER_SCOPE_H_
+#define PYTHON_INTERPRETER_SCOPE_H_
 
 #include "Python3Parser.h"
 #include "real_any.h"

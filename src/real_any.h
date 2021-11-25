@@ -1,5 +1,5 @@
-#ifndef PYTHON_INTERPRETER_REAL_ANY_H
-#define PYTHON_INTERPRETER_REAL_ANY_H
+#ifndef PYTHON_INTERPRETER_REAL_ANY_H_
+#define PYTHON_INTERPRETER_REAL_ANY_H_
 
 #include "int2048.h"
 using std::string;
@@ -18,7 +18,7 @@ class RealAny {
   string str_data;
 
  public:
-  vector<RealAny> tuple;
+  vector<RealAny> array;
   Types type = kNone;
   RealAny() = default;
   RealAny(const string &);
@@ -26,7 +26,6 @@ class RealAny {
   RealAny(const int2048 &);
   RealAny(const double &);
   RealAny(const vector<RealAny> &);
-  RealAny(const Types &);
 
   bool ToBool() const;
   int2048 ToInt() const;
