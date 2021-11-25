@@ -351,6 +351,7 @@ antlrcpp::Any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) 
       value = list_array[i].second;
       variable.LeftValue(var_name) = value;
     }
+    // 注意 Keyword argument 可以跳过一些有默认值的参数，见 data2.in 
     for (int i = 0; i < para_size; ++i) {
       var_name = para_array[i].first, value = para_array[i].second;
       if (!variable.Find(var_name)) variable.LeftValue(var_name) = value;

@@ -68,7 +68,7 @@ RealAny &RealAny::operator+=(const RealAny &rhs) {
 }
 RealAny operator+(const RealAny &lhs, const RealAny &rhs) {
   RealAny ans;
-  ans.type = std::max(lhs.type, rhs.type);
+  ans.type = max(kInt, max(lhs.type, rhs.type));  // 注意至少 int
   switch (ans.type) {
     case kBool: case kInt:
       ans.int_data = lhs.ToInt() + rhs.ToInt(); break;
@@ -89,7 +89,7 @@ RealAny &RealAny::operator-=(const RealAny &rhs) {
 }
 RealAny operator-(const RealAny &lhs, const RealAny &rhs) {
   RealAny ans;
-  ans.type = std::max(lhs.type, rhs.type);
+  ans.type = max(kInt, max(lhs.type, rhs.type));  // 注意至少 int
   switch (ans.type) {
     case kBool: case kInt:
       ans.int_data = lhs.ToInt() - rhs.ToInt(); break;
@@ -104,7 +104,7 @@ RealAny &RealAny::operator*=(const RealAny &rhs) {
 }
 RealAny operator*(const RealAny &lhs, const RealAny &rhs) {
   RealAny ans;
-  ans.type = std::max(lhs.type, rhs.type);
+  ans.type = max(kInt, max(lhs.type, rhs.type));  // 注意至少 int
   switch (ans.type) {
     case kBool: case kInt:
       ans.int_data = lhs.ToInt() * rhs.ToInt(); break;
@@ -174,7 +174,7 @@ bool operator&&(const RealAny &lhs, const RealAny &rhs) {
 }
 bool operator==(const RealAny &lhs, const RealAny &rhs) {
   // None == False is false.
-  Types check = std::max(lhs.type, rhs.type);
+  Types check = max(lhs.type, rhs.type);
   if (check <= kFloat) return !(lhs < rhs) && !(rhs < lhs);
   if (lhs.type != rhs.type) return false;
   switch (check) {
@@ -189,7 +189,7 @@ bool operator!=(const RealAny &lhs, const RealAny &rhs) {
 }
 bool operator<(const RealAny &lhs, const RealAny &rhs) {
   // Only int, float, string
-  Types check = std::max(lhs.type, rhs.type);
+  Types check = max(lhs.type, rhs.type);
   switch(check) {
     case kBool: case kInt:
       return lhs.ToInt() < rhs.ToInt();
