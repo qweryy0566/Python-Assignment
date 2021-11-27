@@ -9,8 +9,7 @@ enum StmtRes { kNormal, kBreak, kContinue, kReturn };
 // To check if it is a variable. If so, return the value of it.
 // 返回类型为 RealAny &
 static RealAny &GetValue(antlrcpp::Any src) {
-  if (src.is<string>()) return variable[src.as<string>()];
-  return src.as<RealAny>();
+  return src.is<string>() ? variable[src.as<string>()] : src.as<RealAny>();
 }
 
 // 无需确定返回类型
@@ -82,7 +81,7 @@ antlrcpp::Any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) 
     // 例子：a, b = b, a
     for (int i = 0; i < right_list.size(); ++i)
       val_array.push_back(GetValue(right_list[i]));
-     if (ctx->augassign()) {
+    if (ctx->augassign()) {
       auto op = ctx->augassign();
       left_list = visitTestlist(list_array[0]).as<vector<antlrcpp::Any>>();
       RealAny &lhs = GetValue(left_list[0]);
