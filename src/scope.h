@@ -21,7 +21,7 @@ class Variable {
   Variable();
   RealAny &LeftValue(const string &);   // 用于定义变量
   RealAny &operator[](const string &);  // 用于取变量的值
-  bool Find(const string &);            // 用于之后添加报错功能
+  bool Find(const string &);            // 预留报错功能
   void AddLevel();
   void DelLevel();
 };

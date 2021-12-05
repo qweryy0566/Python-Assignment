@@ -385,6 +385,7 @@ antlrcpp::Any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   else if (ctx->test())
     return visitTest(ctx->test());
   else {  // That means STRING+.
+    // TODO : LONG_STRING
     string ans;
     auto str_array = ctx->STRING();
     for (auto it : str_array) {
